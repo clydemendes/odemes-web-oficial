@@ -1,0 +1,43 @@
+// Lucide-style icons as React components. Stroke 1.75, currentColor.
+const I = ({ d, size = 16, ...rest }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...rest}>{d}</svg>
+);
+const Icons = {
+  home:    (p) => <I {...p} d={<><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></>} />,
+  list:    (p) => <I {...p} d={<><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></>} />,
+  repeat:  (p) => <I {...p} d={<><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></>} />,
+  chart:   (p) => <I {...p} d={<><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-6"/></>} />,
+  settings:(p) => <I {...p} d={<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.4 1.8l.1.1a2 2 0 01-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.4 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.4l-.1.1a2 2 0 01-2.8-2.8l.1-.1a1.7 1.7 0 00.4-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.4-1.8l-.1-.1A2 2 0 016.9 4.2l.1.1a1.7 1.7 0 001.8.4H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.4l.1-.1a2 2 0 012.8 2.8l-.1.1a1.7 1.7 0 00-.4 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></>} />,
+  plus:    (p) => <I {...p} d={<><path d="M12 5v14"/><path d="M5 12h14"/></>} />,
+  minus:   (p) => <I {...p} d={<><path d="M5 12h14"/></>} />,
+  search:  (p) => <I {...p} d={<><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>} />,
+  bell:    (p) => <I {...p} d={<><path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9z"/><path d="M10 21a2 2 0 004 0"/></>} />,
+  arrow_left:  (p) => <I {...p} d={<><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></>} />,
+  arrow_right: (p) => <I {...p} d={<><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></>} />,
+  arrow_up:    (p) => <I {...p} d={<><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></>} />,
+  arrow_down:  (p) => <I {...p} d={<><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></>} />,
+  check:   (p) => <I {...p} d={<><path d="M20 6L9 17l-5-5"/></>} />,
+  x:       (p) => <I {...p} d={<><path d="M18 6L6 18"/><path d="M6 6l12 12"/></>} />,
+  edit:    (p) => <I {...p} d={<><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>} />,
+  trash:   (p) => <I {...p} d={<><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></>} />,
+  download:(p) => <I {...p} d={<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></>} />,
+  upload:  (p) => <I {...p} d={<><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></>} />,
+  calendar:(p) => <I {...p} d={<><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></>} />,
+  tag:     (p) => <I {...p} d={<><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0l-7.6-7.6V3h10l7.6 7.6a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="0.5"/></>} />,
+  globe:   (p) => <I {...p} d={<><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 010 18 14 14 0 010-18z"/></>} />,
+  moon:    (p) => <I {...p} d={<><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></>} />,
+  sun:     (p) => <I {...p} d={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></>} />,
+  logout:  (p) => <I {...p} d={<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></>} />,
+  more:    (p) => <I {...p} d={<><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>} />,
+  filter:  (p) => <I {...p} d={<><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></>} />,
+  zap:     (p) => <I {...p} d={<><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></>} />,
+  trending:(p) => <I {...p} d={<><path d="M22 7l-9.5 9.5-5-5L1 18"/><path d="M16 7h6v6"/></>} />,
+  wallet:  (p) => <I {...p} d={<><path d="M20 12V8H4a2 2 0 010-4h12v4"/><path d="M4 6v14a2 2 0 002 2h14v-6"/><circle cx="17" cy="15" r="1.5"/></>} />,
+  shield:  (p) => <I {...p} d={<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></>} />,
+  lock:    (p) => <I {...p} d={<><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>} />,
+  copy:    (p) => <I {...p} d={<><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></>} />,
+  panel_left:  (p) => <I {...p} d={<><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></>} />,
+  panel_right: (p) => <I {...p} d={<><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M15 3v18"/></>} />,
+  menu:        (p) => <I {...p} d={<><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></>} />,
+};
+window.Icons = Icons;

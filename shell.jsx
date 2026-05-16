@@ -1,0 +1,126 @@
+// Browser frame + sidebar shell.
+const { Icons } = window;
+
+function getInitials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+}
+
+function BrowserChrome() {
+  return (
+    <div className="b-chrome">
+      <div className="b-lights"><span /><span /><span /></div>
+      <div className="b-tabs">
+        <div className="b-tab">
+          <img src="assets/logo-black.png" alt="" className="logo-light" />
+          <img src="assets/logo-white.png" alt="" className="logo-dark" />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Odemes — Personal Finance</span>
+          <Icons.x size={11} />
+        </div>
+      </div>
+      <div className="b-url">
+        <Icons.lock size={11} />
+        <span>app.odemes.com/<span style={{ color: 'var(--text)' }}>home</span></span>
+      </div>
+      <div className="b-actions">
+        <Icons.download size={14} />
+        <Icons.more size={14} />
+      </div>
+    </div>);
+
+}
+
+function Sidebar({ page, setPage, collapsed, onToggleCollapse, counts = {}, user }) {
+  window.useLang?.();
+  const items = [
+  { id: 'home', label: window.t?.('nav_home') || 'Home', ico: 'home' },
+  { id: 'transactions', label: window.t?.('nav_transactions') || 'Transactions', ico: 'list', pill: counts.transactions },
+  { id: 'recurring', label: window.t?.('nav_recurring') || 'Recurring', ico: 'repeat', pill: counts.recurring },
+  { id: 'report', label: window.t?.('nav_report') || 'Report', ico: 'chart' }];
+
+  return (
+    <aside className="side">
+      <div className="side-brand">
+        <div className="side-brand-logo">
+          <img src="assets/logo-black.png" alt="Odemes" className="logo-light" />
+          <img src="assets/logo-white.png" alt="Odemes" className="logo-dark" />
+        </div>
+        <button
+          className="side-collapse-btn"
+          onClick={onToggleCollapse}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed ? <Icons.panel_right size={16} /> : <Icons.panel_left size={16} />}
+        </button>
+      </div>
+
+      <div className="side-section">{window.t?.('nav_workspace') || 'Workspace'}</div>
+      {items.map((it) => {
+        const Ico = Icons[it.ico];
+        return (
+          <button key={it.id} className={`side-item ${page === it.id ? 'active' : ''}`} onClick={() => setPage(it.id)}>
+            <Ico className="ico" />
+            <span>{it.label}</span>
+            {it.pill && <span className="pill">{it.pill}</span>}
+          </button>);
+
+      })}
+
+      <div className="side-spacer" />
+
+      <div className="side-user-wrap">
+      <button className={`side-user ${page === 'settings' ? 'active' : ''}`} onClick={() => setPage('settings')} title={window.t?.('nav_settings') || 'Settings'}>
+        <div className="av">{user ? getInitials(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '') : '?'}</div>
+        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+          <div className="nm" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || ''}</div>
+          <div className="em" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email || ''}</div>
+        </div>
+      </button>
+      </div>
+    </aside>);
+
+}
+
+function TopBar({ title, sub, right }) {
+  return (
+    <div className="topbar">
+      <div>
+        <h1>{title}</h1>
+        {sub && <div className="sub">{sub}</div>}
+      </div>
+      <div className="topbar-right">{right}</div>
+    </div>);
+
+}
+
+// Theme + dark logo swap
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
+function applyAccent(hex) {
+  // derive deep + tint
+  const root = document.documentElement;
+  root.style.setProperty('--accent', hex);
+  // Simple deep: darken via mixing with black 18%
+  const deep = mixHex(hex, '#000000', 0.18);
+  root.style.setProperty('--accent-deep', deep);
+  // tint = mix with white
+  root.style.setProperty('--accent-tint', mixHex(hex, '#ffffff', 0.88));
+  root.style.setProperty('--accent-text', mixHex(hex, '#000000', 0.28));
+}
+function hexToRgb(h) {h = h.replace('#', '');return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));}
+function rgbToHex(r, g, b) {return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');}
+function mixHex(a, b, w) {
+  const [r1, g1, b1] = hexToRgb(a),[r2, g2, b2] = hexToRgb(b);
+  return rgbToHex(
+    Math.round(r1 * (1 - w) + r2 * w),
+    Math.round(g1 * (1 - w) + g2 * w),
+    Math.round(b1 * (1 - w) + b2 * w)
+  );
+}
+
+window.AppShell = { BrowserChrome, Sidebar, TopBar, applyTheme, applyAccent };

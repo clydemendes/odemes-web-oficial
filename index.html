@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <title>Odemes — Personal Finance</title>
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
@@ -749,12 +749,117 @@
   [data-theme="dark"] .logo-light { display: none; }
   [data-theme="dark"] .logo-dark  { display: block; }
 
+  /* Mobile-only UI — hidden on desktop */
+  .mobile-tab-bar,
+  .app-store-banner { display: none; }
+
   @media (max-width: 720px) {
     .app { grid-template-columns: 1fr !important; }
-    .side { position: fixed; left: -260px; top: 0; width: 240px; z-index: 50; transition: left 240ms ease; }
-    .app[data-mobile-open="1"] .side { left: 0; }
+    .app .side { display: none !important; }
     .stage { padding: 0; }
-    .browser { border-radius: 0; }
+    .browser { border-radius: 0; min-height: 100vh; min-height: 100dvh; }
+
+    .app-main {
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    }
+    html.has-app-banner .app-main,
+    html.has-app-banner .auth-stage {
+      padding-top: calc(52px + env(safe-area-inset-top, 0px));
+    }
+
+    .page { padding: 16px 16px 20px; }
+    .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    .topbar h1 { font-size: 18px; }
+
+    /* iPhone App Store banner */
+    html.is-iphone .app-store-banner {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 80;
+      padding: calc(8px + env(safe-area-inset-top, 0px)) 10px 8px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-card);
+    }
+    .app-store-banner-inner {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; max-width: 520px; margin: 0 auto;
+    }
+    .app-store-banner-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      flex-shrink: 0; object-fit: cover;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    .app-store-banner-text {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .app-store-banner-text strong {
+      font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .app-store-banner-text span {
+      font-size: 11px; color: var(--text-3);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .app-store-banner-btn {
+      flex-shrink: 0;
+      padding: 7px 12px; border-radius: 999px;
+      background: var(--accent); color: #fff;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+    }
+    .app-store-banner-btn:active { transform: scale(0.97); }
+    .app-store-banner-close {
+      flex-shrink: 0;
+      width: 28px; height: 28px; border-radius: 99px;
+      display: grid; place-items: center;
+      color: var(--text-3); font-size: 18px; line-height: 1;
+    }
+    .app-store-banner-close:hover { background: var(--bg-warm); color: var(--text); }
+
+    /* Bottom tab navigation */
+    .mobile-tab-bar {
+      display: flex;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 70;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      background: var(--bg);
+      border-top: 1px solid var(--border-soft);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] .mobile-tab-bar {
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.35);
+    }
+    .mobile-tab-bar-item {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 4px 6px;
+      min-height: 56px;
+      color: var(--text-3);
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mobile-tab-bar-item.active { color: var(--accent); }
+    .mobile-tab-bar-item .ico { width: 20px; height: 20px; }
+    .mobile-tab-bar-item span {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mobile-tab-bar-pill {
+      position: absolute; top: 4px; right: calc(50% - 22px);
+      min-width: 16px; height: 16px; padding: 0 4px;
+      border-radius: 99px; background: var(--accent); color: #fff;
+      font-size: 9px; font-weight: 700;
+      display: grid; place-items: center;
+    }
+
+    .auth-stage { min-height: 100vh; min-height: 100dvh; }
+    .auth-main { padding: 20px 20px 28px; }
   }
 </style>
 </head>

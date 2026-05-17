@@ -123,4 +123,62 @@ function mixHex(a, b, w) {
   );
 }
 
-window.AppShell = { BrowserChrome, Sidebar, TopBar, applyTheme, applyAccent };
+const APP_STORE_URL = 'https://apps.apple.com/us/app/odemes/id6759557054';
+
+function isIPhone() {
+  return typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent);
+}
+
+function AppStoreBanner({ onDismiss }) {
+  window.useLang?.();
+  if (!isIPhone()) return null;
+  return (
+    <div className="app-store-banner" role="region" aria-label="Download Odemes app">
+      <div className="app-store-banner-inner">
+        <img className="app-store-banner-icon" src="assets/apple-touch-icon.png" alt="" />
+        <div className="app-store-banner-text">
+          <strong>{window.t?.('mobile_app_title') || 'Get the Odemes app'}</strong>
+          <span>{window.t?.('mobile_app_sub') || 'Track money faster on iPhone'}</span>
+        </div>
+        <a className="app-store-banner-btn" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+          {window.t?.('mobile_app_get') || 'Get'}
+        </a>
+        <button type="button" className="app-store-banner-close" onClick={onDismiss} aria-label="Dismiss">×</button>
+      </div>
+    </div>
+  );
+}
+
+function MobileTabBar({ page, setPage, counts = {} }) {
+  window.useLang?.();
+  const items = [
+    { id: 'home', ico: 'home', label: window.t?.('nav_home') || 'Home' },
+    { id: 'transactions', ico: 'list', label: window.t?.('nav_transactions') || 'Transactions', pill: counts.transactions },
+    { id: 'recurring', ico: 'repeat', label: window.t?.('nav_recurring') || 'Recurring', pill: counts.recurring },
+    { id: 'report', ico: 'chart', label: window.t?.('nav_report') || 'Report' },
+    { id: 'settings', ico: 'settings', label: window.t?.('nav_settings') || 'Settings' },
+  ];
+  return (
+    <nav className="mobile-tab-bar" aria-label="Main navigation">
+      {items.map((it) => {
+        const Ico = Icons[it.ico];
+        const active = page === it.id;
+        return (
+          <button
+            key={it.id}
+            type="button"
+            className={`mobile-tab-bar-item ${active ? 'active' : ''}`}
+            onClick={() => setPage(it.id)}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Ico className="ico" />
+            <span>{it.label}</span>
+            {it.pill > 0 && <span className="mobile-tab-bar-pill">{it.pill > 99 ? '99+' : it.pill}</span>}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, applyTheme, applyAccent, isIPhone };

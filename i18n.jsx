@@ -67,6 +67,8 @@ const TRANSLATIONS = {
     auth_lede: 'Log income and expenses in seconds. Odemes scores your month from A to F so you always know where you stand — without spreadsheets, categories, or guilt.',
     auth_trusted: 'Trusted by 42,000 mindful spenders', connecting: 'Connecting…',
     on_track: "You're on track", saved_pct_target: 'Saved {pct}% of target · {days} days ahead',
+    mobile_app_title: 'Get the Odemes app', mobile_app_sub: 'Track money faster on iPhone',
+    mobile_app_get: 'Get',
   },
   es: {
     nav_workspace: 'Espacio', nav_account: 'Cuenta',
@@ -135,6 +137,8 @@ const TRANSLATIONS = {
     auth_lede: 'Registra ingresos y gastos en segundos. Odemes puntúa tu mes de A a F para que siempre sepas dónde estás — sin hojas de cálculo, categorías ni culpa.',
     auth_trusted: 'Elegido por 42.000 ahorradores', connecting: 'Conectando…',
     on_track: 'Vas bien', saved_pct_target: 'Ahorro del {pct}% · {days} días por delante',
+    mobile_app_title: 'Descarga Odemes', mobile_app_sub: 'Controla tu dinero más rápido en iPhone',
+    mobile_app_get: 'Obtener',
   },
   pt: {
     nav_workspace: 'Área de Trabalho', nav_account: 'Conta',
@@ -203,6 +207,8 @@ const TRANSLATIONS = {
     auth_lede: 'Registe receitas e despesas em segundos. O Odemes classifica o seu mês de A a F para que saiba sempre onde está — sem folhas de cálculo, categorias ou culpa.',
     auth_trusted: 'Confiado por 42.000 poupadores', connecting: 'A ligar…',
     on_track: 'No bom caminho', saved_pct_target: 'Poupança de {pct}% · {days} dias adiantado',
+    mobile_app_title: 'Baixe o Odemes', mobile_app_sub: 'Controle seu dinheiro mais rápido no iPhone',
+    mobile_app_get: 'Baixar',
   },
   fr: {
     nav_workspace: 'Espace', nav_account: 'Compte',
@@ -271,6 +277,8 @@ const TRANSLATIONS = {
     auth_lede: "Enregistrez revenus et dépenses en quelques secondes. Odemes note votre mois de A à F pour que vous sachiez toujours où vous en êtes — sans tableurs, catégories ni culpabilité.",
     auth_trusted: 'Approuvé par 42 000 épargnants', connecting: 'Connexion…',
     on_track: 'Vous êtes sur la bonne voie', saved_pct_target: 'Épargné {pct}% · {days} jours en avance',
+    mobile_app_title: "Téléchargez Odemes", mobile_app_sub: 'Suivez votre argent plus vite sur iPhone',
+    mobile_app_get: 'Obtenir',
   },
 };
 

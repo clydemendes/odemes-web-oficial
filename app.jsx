@@ -1,5 +1,5 @@
 // Top-level app — routing, session, theme/accent
-const { Sidebar, applyTheme, applyAccent } = window.AppShell;
+const { Sidebar, AppStoreBanner, MobileTabBar, applyTheme, applyAccent, isIPhone } = window.AppShell;
 const { useTweaks } = window;
 
 // Format a number as currency. Uses Intl so symbol, grouping and decimals are locale-correct.
@@ -37,6 +37,29 @@ function App() {
   const [collapsed, setCollapsed] = React.useState(false);
   const [txnCount, setTxnCount] = React.useState(0);
   const [recurCount, setRecurCount] = React.useState(0);
+  const [bannerDismissed, setBannerDismissed] = React.useState(() => {
+    try { return localStorage.getItem('odemes_app_banner_dismissed') === '1'; } catch { return false; }
+  });
+
+  const dismissAppBanner = () => {
+    setBannerDismissed(true);
+    try { localStorage.setItem('odemes_app_banner_dismissed', '1'); } catch {}
+  };
+
+  React.useEffect(() => {
+    if (isIPhone()) document.documentElement.classList.add('is-iphone');
+    const mq = window.matchMedia('(max-width: 720px)');
+    const syncMobile = () => document.documentElement.classList.toggle('is-mobile', mq.matches);
+    syncMobile();
+    mq.addEventListener('change', syncMobile);
+    return () => mq.removeEventListener('change', syncMobile);
+  }, []);
+
+  React.useEffect(() => {
+    const show = isIPhone() && !bannerDismissed;
+    document.documentElement.classList.toggle('has-app-banner', show);
+    return () => document.documentElement.classList.remove('has-app-banner');
+  }, [bannerDismissed]);
 
   React.useEffect(() => { applyTheme(tweaks.theme); }, [tweaks.theme]);
   React.useEffect(() => { applyAccent(tweaks.accent); }, [tweaks.accent]);
@@ -115,6 +138,7 @@ function App() {
     return (
       <div className="stage">
         <div className="browser">
+          {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
           <window.PageAuth />
         </div>
       </div>
@@ -131,12 +155,14 @@ function App() {
   return (
     <div className="stage">
       <div className="browser">
+        {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
         <div className="app" data-collapsed={collapsed ? '1' : '0'}>
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} onToggleCollapse={() => setCollapsed(c => !c)} counts={{ transactions: txnCount, recurring: recurCount }} user={user} />
-          <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <main className="app-main" style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1, minHeight: 0 }}>{content}</div>
           </main>
         </div>
+        <MobileTabBar page={page} setPage={setPage} counts={{ transactions: txnCount, recurring: recurCount }} />
       </div>
     </div>
   );

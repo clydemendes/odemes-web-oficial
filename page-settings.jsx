@@ -3,7 +3,7 @@ const { Icons: SI } = window;
 
 function Row({ title, sub, control }) {
   return (
-    <div style={{
+    <div className="settings-row" style={{
       display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'center',
       padding: '16px 0', borderBottom: '1px solid var(--border-soft)',
     }}>
@@ -18,7 +18,7 @@ function Row({ title, sub, control }) {
 
 function SectionHead({ title, desc }) {
   return (
-    <div style={{ paddingBottom: 14, marginBottom: 4, borderBottom: '1px solid var(--border-soft)' }}>
+    <div className="section-head" style={{ paddingBottom: 14, marginBottom: 4, borderBottom: '1px solid var(--border-soft)' }}>
       <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.011em' }}>{title}</div>
       {desc && <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4 }}>{desc}</div>}
     </div>
@@ -88,14 +88,14 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
 
   return (
     <div className="page">
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('settings_title')}</h2>
-        <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{window.t('settings_sub')}</div>
+      <div className="page-intro" style={{ marginBottom: 24 }}>
+        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('settings_title')}</h2>
+        <div className="page-sub" style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{window.t('settings_sub')}</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32, alignItems: 'start' }}>
+      <div className="settings-layout" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32, alignItems: 'start' }}>
         {/* Tab nav */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, position: 'sticky', top: 24 }}>
+        <nav className="settings-nav" style={{ display: 'flex', flexDirection: 'column', gap: 2, position: 'sticky', top: 24 }}>
           {tabs.map(t => {
             const Ico = SI[t.ico];
             return (
@@ -117,14 +117,14 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
               </button>
             );
           })}
-          <div style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--border-soft)', fontSize: 11, color: 'var(--text-3)', padding: '16px 12px 0' }}>
+          <div className="settings-version" style={{ marginTop: 22, paddingTop: 16, borderTop: '1px solid var(--border-soft)', fontSize: 11, color: 'var(--text-3)', padding: '16px 12px 0' }}>
             {window.t('version_label')}<br />
             {window.t('build_label')}
           </div>
         </nav>
 
         {/* Content */}
-        <div style={{ maxWidth: 640 }}>
+        <div className="settings-content" style={{ maxWidth: 640 }}>
 
           {tab === 'account' && (
             <div>

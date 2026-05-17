@@ -392,8 +392,8 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
 
   return (
     <div className="page">
-      <div style={{ marginBottom: 18 }}>
-        <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('welcome_back')}</h2>
+      <div className="page-intro" style={{ marginBottom: 18 }}>
+        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('welcome_back')}</h2>
         <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>
           {htoday.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
           {stats.grade !== '—' && window.t('grade_this_month', { grade: stats.grade })}

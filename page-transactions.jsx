@@ -72,7 +72,7 @@ function TxModal({ tx, onClose, onSave, onDelete, allExpItems, allIncItems }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'grid', placeItems: 'center', zIndex: 200 }}>
-      <div onClick={e => e.stopPropagation()} className="card" style={{ width: 440, boxShadow: 'var(--shadow-deep)' }}>
+      <div onClick={e => e.stopPropagation()} className="card modal-card" style={{ width: 440, boxShadow: 'var(--shadow-deep)' }}>
         <div className="card-head">
           <div className="card-title">{isNew ? window.t('new_txn') : window.t('edit_txn')}</div>
           <button className="icon-btn" onClick={onClose}><TxI.x size={14} /></button>
@@ -206,31 +206,31 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
 
   return (
     <div className="page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('nav_transactions')}</h2>
+      <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('nav_transactions')}</h2>
         <button className="btn btn-primary" onClick={() => setModal('new')}><TxI.plus size={14} /> {window.t('add')}</button>
       </div>
 
-      <div className="card" style={{ marginBottom: 16, padding: 0 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <div style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('income')}</div>
-            <div className="mono" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(income, currency)}</div>
+      <div className="card list-card" style={{ marginBottom: 16, padding: 0 }}>
+        <div className="stat-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          <div className="stat-cell" style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
+            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('income')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(income, currency)}</div>
           </div>
-          <div style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('expense')}</div>
-            <div className="mono" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(expenses, currency)}</div>
+          <div className="stat-cell" style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
+            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('expense')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(expenses, currency)}</div>
           </div>
-          <div style={{ padding: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('net')}</div>
-            <div className="mono" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}>
+          <div className="stat-cell" style={{ padding: 20 }}>
+            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('net')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}>
               {net >= 0 ? '+' : '−'}{window.fmtCurrency(net, currency)}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card" style={{ marginBottom: 16, padding: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card filters-card" style={{ marginBottom: 16, padding: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <div className="seg">
           {periods.map(p => (
             <button key={p.id} onClick={() => handlePeriodChange(p.id)} className={period === p.id ? 'active' : ''}>{p.label}</button>
@@ -243,21 +243,22 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
             <button className="btn btn-ghost" style={{ padding: '6px 8px', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0}><TxI.arrow_right size={14} /></button>
           </>
         )}
-        {period === 'overall' && <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{window.t('all_time')}</span>}
-        <div style={{ flex: 1 }} />
-        <div style={{ display: 'flex', gap: 6 }}>
-          {filters.map(f => (
-            <button key={f.id} onClick={() => setFilter(f.id)}
-              style={{ padding: '6px 12px', borderRadius: 9999, background: filter === f.id ? 'var(--accent-tint)' : 'var(--bg-warm)', color: filter === f.id ? 'var(--accent-text)' : 'var(--text-2)', border: '1px solid ' + (filter === f.id ? 'transparent' : 'var(--border-soft)'), fontSize: 12, fontWeight: 600 }}>{f.label}</button>
-          ))}
+        <div className="filters-row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, width: '100%' }}>
+          {period === 'overall' && <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{window.t('all_time')}</span>}
+          <div className="filters-pills" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {filters.map(f => (
+              <button key={f.id} onClick={() => setFilter(f.id)}
+                style={{ padding: '6px 12px', borderRadius: 9999, background: filter === f.id ? 'var(--accent-tint)' : 'var(--bg-warm)', color: filter === f.id ? 'var(--accent-text)' : 'var(--text-2)', border: '1px solid ' + (filter === f.id ? 'transparent' : 'var(--border-soft)'), fontSize: 12, fontWeight: 600 }}>{f.label}</button>
+            ))}
+          </div>
         </div>
-        <div style={{ position: 'relative' }}>
+        <div className="filters-search" style={{ position: 'relative' }}>
           <TxI.search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
           <input className="input" placeholder={window.t('search_ph')} value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 32, width: 200 }} />
         </div>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+      <div className="card list-card" style={{ padding: 0, overflow: 'hidden' }}>
         {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>{window.t('loading')}</div>}
         {!loading && dates.length === 0 && <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>{window.t('no_txns_found')}</div>}
         {dates.map(d => {
@@ -265,7 +266,7 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
           const dayTotal = list.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0);
           return (
             <div key={d}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: 'var(--bg-warm)', borderTop: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)' }}>
+              <div className="txn-day-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: 'var(--bg-warm)', borderTop: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {trd(d)} <span style={{ color: 'var(--text-3)', marginLeft: 6 }}>{tfd(d)}</span>
                 </div>
@@ -274,20 +275,20 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
                 </div>
               </div>
               {list.map(t => (
-                <button key={t.id} onClick={() => setModal(t)}
+                <button key={t.id} className="txn-item" onClick={() => setModal(t)}
                   style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', textAlign: 'left' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <div style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: t.type === 'income' ? 'var(--income-tint)' : 'var(--expense-tint)', color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+                  <div className="txn-icon" style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: t.type === 'income' ? 'var(--income-tint)' : 'var(--expense-tint)', color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                     {t.type === 'income' ? <TxI.arrow_down size={14} /> : <TxI.arrow_up size={14} />}
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{t.category}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-3)' }}>{t.note || '—'}</div>
+                    <div className="txn-cat" style={{ fontSize: 14, fontWeight: 500 }}>{t.category}</div>
+                    <div className="txn-note" style={{ fontSize: 12, color: 'var(--text-3)' }}>{t.note || '—'}</div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-3)', textTransform: 'capitalize' }}>{t.type === 'income' ? window.t('income') : window.t('expense')}</div>
-                  <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+                  <div className="txn-type" style={{ fontSize: 12, color: 'var(--text-3)', textTransform: 'capitalize' }}>{t.type === 'income' ? window.t('income') : window.t('expense')}</div>
+                  <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 600, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                     {t.type === 'income' ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
                   </div>
                 </button>

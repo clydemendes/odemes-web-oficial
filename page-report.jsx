@@ -131,17 +131,17 @@ function PageReport({ userId, currency = 'USD' }) {
                 </svg>
                 <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.04em', color: gradeColor }}>{grade}</div>
+                    <div className="grade-letter" style={{ fontSize: 76, fontWeight: 700, lineHeight: 1, letterSpacing: '-0.04em', color: gradeColor }}>{grade}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{Math.round(savings * 100)}% {window.t('savings_rate').toLowerCase()}</div>
                   </div>
                 </div>
               </div>
-              <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 8 }}>
+              <div className="grade-summary" style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 8 }}>
                 {incomeSum > 0
                   ? window.t('saving_pct', { pct: Math.round(savings * 100) })
                   : <span style={{ color: 'var(--text-3)' }}>{window.t('no_income_recorded')}</span>}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-soft)' }}>
+              <div className="grade-stats" style={{ display: 'flex', justifyContent: 'space-around', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-soft)' }}>
                 <div><div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('income')}</div><div className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--income)' }}>+{window.fmtCurrency(incomeSum, currency, 0)}</div></div>
                 <div><div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('expense')}</div><div className="mono" style={{ fontSize: 16, fontWeight: 600, color: 'var(--expense)' }}>−{window.fmtCurrency(expSum, currency, 0)}</div></div>
                 <div><div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('net')}</div><div className="mono" style={{ fontSize: 16, fontWeight: 600 }}>{window.fmtCurrency(incomeSum - expSum, currency, 0)}</div></div>
@@ -156,7 +156,7 @@ function PageReport({ userId, currency = 'USD' }) {
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--expense)' }} /> {window.t('expense')}</span>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${SERIES.length}, 1fr)`, gap: 14, height: 220, alignItems: 'end', padding: '12px 4px 0' }}>
+              <div className="chart-bars" style={{ display: 'grid', gridTemplateColumns: `repeat(${SERIES.length}, 1fr)`, gap: 14, height: 220, alignItems: 'end', padding: '12px 4px 0' }}>
                 {SERIES.map((s, i) => (
                   <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%' }}>
                     <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end', gap: 4 }}>
@@ -170,7 +170,7 @@ function PageReport({ userId, currency = 'USD' }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16 }}>
+          <div className="report-bottom" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 16 }}>
             <div className="card">
               <div className="card-head">
                 <div className="card-title">{window.t('by_category')}</div>
@@ -179,7 +179,7 @@ function PageReport({ userId, currency = 'USD' }) {
               {totalExp === 0 ? (
                 <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--text-3)' }}>{window.t('no_expenses')}</div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 22, alignItems: 'center' }}>
+                <div className="pie-layout" style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 22, alignItems: 'center' }}>
                   <svg width="180" height="180" viewBox="-90 -90 180 180">
                     {segs.map((s, i) => {
                       const a1 = s.start * Math.PI / 180 - Math.PI / 2;
@@ -194,7 +194,7 @@ function PageReport({ userId, currency = 'USD' }) {
                     <text x="0" y="-4" textAnchor="middle" style={{ fontSize: 10, fill: 'var(--text-3)', fontWeight: 600, letterSpacing: 1 }}>{window.t('spent')}</text>
                     <text x="0" y="14" textAnchor="middle" style={{ fontSize: 18, fill: 'var(--text)', fontWeight: 700, fontFamily: 'var(--mono)' }}>{window.fmtCurrency(totalExp, currency, 0)}</text>
                   </svg>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div className="pie-legend" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {segs.map((s, i) => (
                       <div key={i} style={{ display: 'grid', gridTemplateColumns: '12px 1fr auto auto', alignItems: 'center', gap: 10 }}>
                         <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color }} />

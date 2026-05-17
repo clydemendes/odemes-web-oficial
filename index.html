@@ -769,7 +769,211 @@
       padding-top: calc(52px + env(safe-area-inset-top, 0px));
     }
 
-    .page { padding: 16px 16px 20px; }
+    .page { padding: 10px 12px 14px; }
+    .page-title { font-size: 18px !important; letter-spacing: -0.02em !important; }
+    .page-sub { font-size: 12px !important; margin-top: 2px !important; }
+    .page-head {
+      margin-bottom: 10px !important;
+      gap: 8px !important;
+      align-items: center !important;
+    }
+    .page-head .btn { padding: 7px 11px; font-size: 13px; }
+    .page-intro { margin-bottom: 10px !important; }
+
+    .card { padding: 12px !important; border-radius: 10px; }
+    .card-head { margin-bottom: 8px; }
+    .card-title { font-size: 14px; }
+    .card-sub { font-size: 11px; }
+
+    .stat-row { display: grid !important; grid-template-columns: repeat(3, 1fr) !important; }
+    .stat-row .stat-cell {
+      padding: 10px 8px !important;
+      border-right: none !important;
+      border-bottom: none !important;
+    }
+    .stat-row .stat-cell:not(:last-child) {
+      border-right: 1px solid var(--border-soft) !important;
+    }
+    .stat-label { font-size: 9px !important; letter-spacing: 0.05em !important; }
+    .stat-value { font-size: 15px !important; margin-top: 2px !important; letter-spacing: -0.02em !important; }
+    .stat-meta { font-size: 10px !important; margin-top: 0 !important; }
+
+    .stat-grid {
+      display: grid !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 8px !important;
+      margin-bottom: 10px !important;
+    }
+    .stat-grid .card { padding: 10px !important; margin: 0 !important; }
+    .stat-grid .stat-value { font-size: 14px !important; }
+
+    .filters-card {
+      padding: 10px !important;
+      gap: 8px !important;
+      margin-bottom: 10px !important;
+      flex-direction: column !important;
+      align-items: stretch !important;
+    }
+    .filters-card .seg { width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .filters-card .seg button { padding: 5px 9px; font-size: 11px; white-space: nowrap; }
+    .filters-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 100%; }
+    .filters-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+    .filters-pills button { padding: 5px 10px !important; font-size: 11px !important; }
+    .filters-search { width: 100% !important; position: relative; }
+    .filters-search .input { width: 100% !important; padding: 8px 10px 8px 30px !important; font-size: 13px; }
+
+    .list-card { margin-bottom: 0 !important; }
+    .list-card-head {
+      padding: 8px 12px !important;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .txn-day-head { padding: 5px 12px !important; font-size: 10px !important; }
+    .txn-item {
+      grid-template-columns: 28px 1fr auto !important;
+      gap: 8px !important;
+      padding: 8px 12px !important;
+    }
+    .txn-item .txn-type { display: none !important; }
+    .txn-item .txn-icon {
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 7px !important;
+    }
+    .txn-item .txn-cat { font-size: 13px !important; font-weight: 500; }
+    .txn-item .txn-note { font-size: 11px !important; }
+    .txn-item .txn-amt { font-size: 13px !important; white-space: nowrap; }
+
+    .recur-item {
+      grid-template-columns: 32px 1fr auto !important;
+      grid-template-rows: auto auto;
+      gap: 6px 8px !important;
+      padding: 10px 12px !important;
+      align-items: center !important;
+    }
+    .recur-item .recur-icon {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 8px !important;
+      font-size: 12px !important;
+    }
+    .recur-item .recur-meta { font-size: 11px !important; }
+    .recur-item .recur-freq { display: none !important; }
+    .recur-item .recur-due { justify-self: end; }
+    .recur-item .recur-amt { font-size: 13px !important; justify-self: end; }
+    .recur-item .recur-actions {
+      grid-column: 1 / -1;
+      display: flex !important;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+    .recur-item .recur-actions .btn { font-size: 11px !important; padding: 5px 10px !important; }
+
+    .settings-layout {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+    }
+    .settings-nav {
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: nowrap !important;
+      overflow-x: auto;
+      gap: 6px !important;
+      position: static !important;
+      top: auto !important;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .settings-nav::-webkit-scrollbar { display: none; }
+    .settings-nav button {
+      flex-shrink: 0;
+      width: auto !important;
+      padding: 8px 12px !important;
+      font-size: 13px !important;
+      white-space: nowrap;
+    }
+    .settings-version { display: none !important; }
+    .settings-content { max-width: none !important; width: 100%; }
+    .settings-content .section-head { padding-bottom: 10px; margin-bottom: 2px; }
+    .settings-content .section-head > div:first-child { font-size: 16px !important; }
+    .settings-row {
+      grid-template-columns: 1fr auto !important;
+      gap: 10px !important;
+      padding: 12px 0 !important;
+    }
+    .settings-row > div:first-child > div:first-child { font-size: 13px !important; }
+    .settings-row > div:first-child > div:last-child { font-size: 11px !important; max-width: none !important; }
+
+    .report-top {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      margin-bottom: 10px !important;
+    }
+    .report-split {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin-bottom: 10px !important;
+    }
+    .report-split .card { padding: 14px !important; }
+    .grade-card { padding: 14px !important; }
+    .grade-ring-wrap {
+      width: 120px !important;
+      height: 120px !important;
+      margin: 6px auto 4px !important;
+    }
+    .grade-ring-wrap svg { width: 120px !important; height: 120px !important; }
+    .grade-letter { font-size: 44px !important; }
+    .grade-summary { font-size: 12px !important; margin-top: 4px !important; }
+    .grade-stats { margin-top: 10px !important; padding-top: 10px !important; }
+    .grade-stats > div > div:last-child { font-size: 13px !important; }
+    .chart-bars { height: 140px !important; gap: 6px !important; padding-top: 8px !important; }
+    .report-bottom {
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+    }
+    .pie-layout {
+      grid-template-columns: 1fr !important;
+      gap: 12px !important;
+      justify-items: center;
+    }
+    .pie-layout svg { width: 140px !important; height: 140px !important; }
+    .pie-legend { width: 100%; gap: 6px !important; }
+
+    .modal-card {
+      width: calc(100vw - 28px) !important;
+      max-width: 440px !important;
+      max-height: calc(100dvh - 40px);
+      overflow-y: auto;
+    }
+
+    html.is-iphone .app-store-banner {
+      padding: calc(5px + env(safe-area-inset-top, 0px)) 8px 5px;
+    }
+    .app-store-banner-icon { width: 28px !important; height: 28px !important; }
+    .app-store-banner-text strong { font-size: 12px !important; }
+    .app-store-banner-text span { font-size: 10px !important; }
+    .app-store-banner-btn { padding: 5px 10px; font-size: 11px; }
+    html.has-app-banner .app-main,
+    html.has-app-banner .auth-stage {
+      padding-top: calc(42px + env(safe-area-inset-top, 0px));
+    }
+
+    .mobile-tab-bar-item { min-height: 48px; padding: 5px 2px 4px; gap: 2px; }
+    .mobile-tab-bar-item span { font-size: 9px; }
+
+    /* Fallback: compact rows without explicit classes */
+    .page button[style*="100px auto"] {
+      grid-template-columns: 28px 1fr auto !important;
+      gap: 8px !important;
+      padding: 8px 12px !important;
+    }
+    .page button[style*="100px auto"] > div:nth-child(3) { display: none !important; }
+    .page h2[style*="fontSize: 26"] { font-size: 18px !important; }
+    .page .mono[style*="fontSize: 28"] { font-size: 15px !important; margin-top: 2px !important; }
+
     .topbar { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
     .topbar h1 { font-size: 18px; }
 

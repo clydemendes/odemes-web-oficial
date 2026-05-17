@@ -85,6 +85,7 @@ function PageAuth() {
   };
 
   return (
+    <>
     <div className="auth-stage">
       {/* Left — marketing panel */}
       <aside className="auth-aside">
@@ -173,6 +174,7 @@ function PageAuth() {
       </section>
     </div>
     {showQR && <AppStoreQRModal onClose={() => setShowQR(false)} />}
+    </>
   );
 }
 

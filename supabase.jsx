@@ -2,15 +2,20 @@
 const { createClient } = window.supabase;
 
 // Production URL — must match Supabase → Authentication → URL configuration (Site URL + Redirect URLs).
-const PRODUCTION_ORIGIN = 'https://odemes-web-oficial-h4vp.vercel.app';
+const PRODUCTION_ORIGIN = 'https://www.odemes.com';
 
-// Where Supabase sends the user after OAuth. If redirectTo is not allowlisted, Supabase falls back to Site URL (often localhost:3000).
+// Where Supabase sends the user after OAuth. If redirectTo is not allowlisted, Supabase falls back to Site URL.
 window.getAuthRedirectUrl = function() {
   const { hostname, origin, pathname } = window.location;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return origin + (pathname || '/');
   }
-  if (hostname.endsWith('.vercel.app') || hostname === 'odemes.com' || hostname.endsWith('.odemes.com')) {
+  if (
+    hostname === 'odemes.com' ||
+    hostname === 'www.odemes.com' ||
+    hostname.endsWith('.odemes.com') ||
+    hostname.endsWith('.vercel.app')
+  ) {
     return origin + '/';
   }
   return PRODUCTION_ORIGIN + '/';

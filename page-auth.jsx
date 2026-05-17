@@ -79,7 +79,7 @@ function PageAuth() {
     setError('');
     const { error: err } = await window.SupabaseClient.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.getAuthRedirectUrl() },
     });
     if (err) { setError(err.message); setLoading(null); }
   };

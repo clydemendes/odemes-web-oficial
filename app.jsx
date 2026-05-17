@@ -60,25 +60,36 @@ function App() {
 
   React.useEffect(() => {
     const sb = window.SupabaseClient;
+    let bootDone = false;
+    const finishBoot = () => {
+      if (bootDone) return;
+      bootDone = true;
+      setBooting(false);
+    };
 
-    sb.auth.getSession().then(({ data: { session } }) => {
+    const applySession = (session) => {
       if (session?.user) {
         setUser(session.user);
         loadProfile(session.user.id);
         setPage('home');
-      }
-      setBooting(false);
-    });
-
-    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadProfile(session.user.id);
-        if (event === 'SIGNED_IN') setPage('home');
       } else {
         setUser(null);
         setPage('auth');
       }
+    };
+
+    const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        applySession(session);
+      } else if (event === 'SIGNED_OUT') {
+        applySession(null);
+      }
+      if (event === 'INITIAL_SESSION') finishBoot();
+    });
+
+    sb.auth.getSession().then(({ data: { session } }) => {
+      applySession(session);
+      finishBoot();
     });
 
     return () => subscription.unsubscribe();

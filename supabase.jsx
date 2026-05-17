@@ -1,9 +1,19 @@
 // Supabase client — must load after the Supabase CDN script
 const { createClient } = window.supabase;
 
-// Where Supabase sends the user after OAuth (must be listed in Supabase → Auth → URL config).
+// Production URL — must match Supabase → Authentication → URL configuration (Site URL + Redirect URLs).
+const PRODUCTION_ORIGIN = 'https://odemes-web-oficial-h4vp.vercel.app';
+
+// Where Supabase sends the user after OAuth. If redirectTo is not allowlisted, Supabase falls back to Site URL (often localhost:3000).
 window.getAuthRedirectUrl = function() {
-  return window.location.origin + (window.location.pathname || '/');
+  const { hostname, origin, pathname } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return origin + (pathname || '/');
+  }
+  if (hostname.endsWith('.vercel.app') || hostname === 'odemes.com' || hostname.endsWith('.odemes.com')) {
+    return origin + '/';
+  }
+  return PRODUCTION_ORIGIN + '/';
 };
 
 window.SupabaseClient = createClient(

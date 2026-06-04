@@ -50,6 +50,12 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
 
   const syncTweak = (key, value) => {
     setTweak(key, value);
+    // For language: also write directly to the i18n key so it survives refresh
+    // immediately, independently of React state or Supabase.
+    if (key === 'language') {
+      try { localStorage.setItem('odemes-lang', value); } catch(e) {}
+      window.setLang?.(value);
+    }
     if (!userId) return;
     const sb = window.SupabaseClient;
     if (key === 'currency') sb.from('profiles').update({ currency: value }).eq('id', userId);

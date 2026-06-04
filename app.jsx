@@ -69,16 +69,27 @@ function App() {
   const loadProfile = async (userId) => {
     const { data } = await window.SupabaseClient
       .from('profiles')
-      .select('currency, language, dark_mode')
+      .select('currency, dark_mode')
       .eq('id', userId)
       .single();
     if (data) {
       if (data.currency) setTweak('currency', data.currency);
-      if (data.language) setTweak('language', data.language);
+      // Language is intentionally NOT loaded from Supabase.
+      // It is stored in both 'odemes-lang' (i18n) and 'odemes-prefs' (tweaks) locally,
+      // and loading from Supabase overwrites the user's chosen language on every refresh.
       if (data.dark_mode !== null && data.dark_mode !== undefined) {
         setTweak('theme', data.dark_mode ? 'dark' : 'light');
       }
     }
+  };
+
+  const loadCounts = async (userId) => {
+    const [{ count: tc }, { count: rc }] = await Promise.all([
+      window.SupabaseClient.from('transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+      window.SupabaseClient.from('recurring_transactions').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+    ]);
+    setTxnCount(tc || 0);
+    setRecurCount(rc || 0);
   };
 
   React.useEffect(() => {
@@ -94,6 +105,7 @@ function App() {
       if (session?.user) {
         setUser(session.user);
         loadProfile(session.user.id);
+        loadCounts(session.user.id);
         setPage('home');
       } else {
         setUser(null);
@@ -112,6 +124,7 @@ function App() {
 
     sb.auth.getSession().then(({ data: { session } }) => {
       applySession(session);
+      if (session?.user) loadCounts(session.user.id);
       finishBoot();
     });
 

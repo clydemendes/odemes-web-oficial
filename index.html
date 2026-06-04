@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
@@ -38,7 +38,8 @@
     --warn-tint: #fdefe0;
     --shadow-card: rgba(0,0,0,0.04) 0px 4px 18px, rgba(0,0,0,0.027) 0px 2px 7px, rgba(0,0,0,0.02) 0px 0.8px 3px, rgba(0,0,0,0.01) 0px 0.2px 1px;
     --shadow-deep: rgba(0,0,0,0.01) 0px 1px 3px, rgba(0,0,0,0.02) 0px 3px 7px, rgba(0,0,0,0.02) 0px 7px 15px, rgba(0,0,0,0.04) 0px 14px 28px, rgba(0,0,0,0.05) 0px 23px 52px;
-    --font: 'Inter', -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font: 'DM Sans', -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-display: 'Playfair Display', Georgia, serif;
     --mono: 'JetBrains Mono', ui-monospace, monospace;
   }
   [data-theme="dark"] {
@@ -64,9 +65,10 @@
   html, body { margin: 0; padding: 0; height: 100%; }
   body {
     font-family: var(--font);
+    font-weight: 600;
     color: var(--text);
     background: var(--bg);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -74,6 +76,7 @@
     overflow-x: hidden;
   }
   a { color: inherit; text-decoration: none; }
+  h1, h2, h3, .page-title { font-family: var(--font-display); letter-spacing: -0.01em; }
   button { font-family: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
   input, select, textarea { font-family: inherit; color: inherit; }
   ::selection { background: var(--accent-tint); color: var(--accent-text); }
@@ -153,7 +156,7 @@
   .side-item {
     display: flex; align-items: center; gap: 10px;
     padding: 7px 10px; border-radius: 6px;
-    font-size: 14px; font-weight: 500; color: var(--text);
+    font-size: 15px; font-weight: 500; color: var(--text);
     cursor: pointer;
     transition: background 120ms ease;
     text-align: left; width: 100%;
@@ -215,8 +218,9 @@
   }
   .topbar h1 {
     margin: 0;
+    font-family: var(--font-display);
     font-size: 22px; font-weight: 700;
-    letter-spacing: -0.011em;
+    letter-spacing: -0.01em;
   }
   .topbar .sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
   .topbar-right { display: flex; gap: 8px; align-items: center; }
@@ -234,7 +238,7 @@
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     padding: 8px 14px; border-radius: 6px;
-    font-size: 14px; font-weight: 600;
+    font-size: 15px; font-weight: 600;
     transition: transform 80ms ease, background 120ms ease, color 120ms ease;
     white-space: nowrap;
   }
@@ -267,8 +271,8 @@
     padding: 20px;
   }
   .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-  .card-title { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; }
-  .card-sub { font-size: 12px; color: var(--text-3); }
+  .card-title { font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
+  .card-sub { font-size: 13px; color: var(--text-3); }
 
   /* ========== Segmented controls ========== */
   .seg {
@@ -279,7 +283,7 @@
   }
   .seg button {
     padding: 6px 14px; border-radius: 6px;
-    font-size: 13px; font-weight: 500; color: var(--text-2);
+    font-size: 14px; font-weight: 500; color: var(--text-2);
     transition: background 120ms ease, color 120ms ease;
   }
   .seg button:hover { color: var(--text); }
@@ -307,7 +311,7 @@
     padding: 10px 12px; border-radius: 8px;
     background: var(--bg);
     border: 1px solid var(--border);
-    font-size: 14px; color: var(--text);
+    font-size: 15px; color: var(--text);
     transition: border-color 120ms ease, box-shadow 120ms ease;
   }
   .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
@@ -412,8 +416,9 @@
   }
   .auth-headline {
     margin: 14px 0 18px;
-    font-size: 44px; font-weight: 700;
-    letter-spacing: -0.025em; line-height: 1.05;
+    font-family: var(--font-display);
+    font-size: 44px; font-weight: 800;
+    letter-spacing: -0.01em; line-height: 1.05;
     text-wrap: balance;
   }
   .auth-lede {
@@ -504,8 +509,9 @@
   }
   .auth-card-head h2 {
     margin: 0;
+    font-family: var(--font-display);
     font-size: 28px; font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.01em;
   }
   .auth-card-head p {
     margin: 6px 0 28px;
@@ -925,22 +931,12 @@
       margin: 6px auto 4px !important;
     }
     .grade-ring-wrap svg { width: 120px !important; height: 120px !important; }
-    .grade-letter { font-size: 44px !important; }
-    .grade-summary { font-size: 12px !important; margin-top: 4px !important; }
-    .grade-stats { margin-top: 10px !important; padding-top: 10px !important; }
-    .grade-stats > div > div:last-child { font-size: 13px !important; }
-    .chart-bars { height: 140px !important; gap: 6px !important; padding-top: 8px !important; }
-    .report-bottom {
-      grid-template-columns: 1fr !important;
-      gap: 10px !important;
-    }
-    .pie-layout {
-      grid-template-columns: 1fr !important;
-      gap: 12px !important;
-      justify-items: center;
-    }
-    .pie-layout svg { width: 140px !important; height: 140px !important; }
-    .pie-legend { width: 100%; gap: 6px !important; }
+    /* report page mobile */
+    .rp-kpi-grid { grid-template-columns: 1fr 1fr !important; }
+    .rp-grade-trend { grid-template-columns: 1fr !important; }
+    .rp-cat-top { grid-template-columns: 1fr !important; }
+    .rp-cat-donut { grid-template-columns: 1fr !important; justify-items: center; }
+    .rp-cat-donut svg { width: 130px !important; height: 130px !important; }
 
     .modal-card {
       width: calc(100vw - 28px) !important;

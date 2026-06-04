@@ -93,20 +93,124 @@ window.DescriptionInput = DescriptionInput;
 
 function DateButton({ value, onChange }) {
   window.useLang();
-  const ref = React.useRef(null);
   const locale = window._i18nLocale || 'en-US';
-  const d = value ? new Date(value + 'T00:00:00') : null;
-  const label = d ? d.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' }) : (window.t?.('pick_date') || 'Pick date');
+  const btnRef  = React.useRef(null);
+  const popRef  = React.useRef(null);
+  const [open, setOpen] = React.useState(false);
+  const [pos,  setPos]  = React.useState({ top: 0, left: 0 });
+  const [view, setView] = React.useState(() => {
+    const base = value ? new Date(value + 'T00:00:00') : new Date();
+    return { y: base.getFullYear(), m: base.getMonth() };
+  });
+
+  React.useEffect(() => {
+    if (value) { const d = new Date(value + 'T00:00:00'); setView({ y: d.getFullYear(), m: d.getMonth() }); }
+  }, [value]);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!open) return;
+    const onDown = e => {
+      if (btnRef.current?.contains(e.target)) return;
+      if (popRef.current?.contains(e.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const openPicker = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const popH = 330;
+      const top = window.innerHeight - r.bottom >= popH ? r.bottom + 6 : r.top - popH - 6;
+      setPos({ top, left: r.left });
+    }
+    setOpen(o => !o);
+  };
+
+  const selected = value ? new Date(value + 'T00:00:00') : null;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const { y, m } = view;
+  const prevM = () => setView(v => v.m === 0 ? { y: v.y - 1, m: 11 } : { y: v.y, m: v.m - 1 });
+  const nextM = () => setView(v => v.m === 11 ? { y: v.y + 1, m: 0 } : { y: v.y, m: v.m + 1 });
+  const firstDow = new Date(y, m, 1).getDay();
+  const daysInM  = new Date(y, m + 1, 0).getDate();
+  const cells    = Array(firstDow).fill(null).concat(Array.from({ length: daysInM }, (_, i) => i + 1));
+  while (cells.length % 7) cells.push(null);
+
+  const pickDay = day => {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    onChange(iso); setOpen(false);
+  };
+
+  const label = selected
+    ? selected.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })
+    : (window.t?.('pick_date') || 'Pick date');
+  const monthTitle = new Date(y, m, 1).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const DOW = Array.from({ length: 7 }, (_, i) => new Date(2017, 0, 1 + i).toLocaleDateString(locale, { weekday: 'narrow' }));
+  const navBtn = { background: 'none', border: 'none', color: 'var(--text-2)', cursor: 'pointer', padding: '5px 8px', borderRadius: 6, display: 'flex', alignItems: 'center' };
+
+  // Render popup via portal so it escapes any overflow:hidden/auto ancestor
+  const popup = open && ReactDOM.createPortal(
+    <div ref={popRef} style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: '18px', width: 276, userSelect: 'none' }}>
+
+      {/* Month nav */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <button style={navBtn} onClick={prevM}><HI.arrow_left size={15} /></button>
+        <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em' }}>{monthTitle}</span>
+        <button style={navBtn} onClick={nextM}><HI.arrow_right size={15} /></button>
+      </div>
+
+      {/* DOW headers */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 8 }}>
+        {DOW.map((d, i) => (
+          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', paddingBottom: 4 }}>{d}</div>
+        ))}
+      </div>
+
+      {/* Day cells */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 3 }}>
+        {cells.map((day, i) => {
+          if (!day) return <div key={i} />;
+          const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const isSel  = iso === value;
+          const isToday = iso === todayStr;
+          return (
+            <button key={i} onClick={() => pickDay(day)} style={{
+              width: '100%', aspectRatio: '1', borderRadius: 9, border: 'none', fontSize: 13,
+              fontWeight: isSel ? 700 : 400, cursor: 'pointer',
+              background: isSel ? 'var(--accent)' : 'transparent',
+              color: isSel ? '#fff' : isToday ? 'var(--accent)' : 'var(--text)',
+              boxShadow: isToday && !isSel ? 'inset 0 0 0 1.5px var(--accent)' : 'none',
+              transition: 'background 80ms',
+            }}
+              onMouseEnter={e => { if (!isSel) e.currentTarget.style.background = 'var(--bg-warm)'; }}
+              onMouseLeave={e => { if (!isSel) e.currentTarget.style.background = 'transparent'; }}
+            >{day}</button>
+          );
+        })}
+      </div>
+
+      {/* Today shortcut */}
+      <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-soft)', textAlign: 'center' }}>
+        <button onClick={() => { onChange(todayStr); setOpen(false); }}
+          style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-tint)', border: 'none', cursor: 'pointer', padding: '5px 16px', borderRadius: 8 }}>
+          {window.t?.('today') || 'Today'}
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+
   return (
-    <div style={{ position: 'relative', display: 'inline-flex' }}>
-      <button type="button" onClick={() => ref.current?.showPicker?.()}
-        style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-warm)', fontSize: 13, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 500, whiteSpace: 'nowrap' }}
-      >
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      <button ref={btnRef} type="button" onClick={openPicker}
+        style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', borderRadius: 8, border: `1px solid ${open ? 'var(--accent)' : 'var(--border)'}`, background: 'var(--bg-warm)', fontSize: 13, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 500, whiteSpace: 'nowrap', transition: 'border-color 120ms' }}>
         <HI.calendar size={13} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
         {label}
       </button>
-      <input ref={ref} type="date" value={value} onChange={e => onChange(e.target.value)}
-        style={{ position: 'absolute', inset: 0, opacity: 0, pointerEvents: 'none', width: '100%' }} tabIndex={-1} />
+      {popup}
     </div>
   );
 }
@@ -114,7 +218,7 @@ window.DateButton = DateButton;
 
 function EntryFormSplit({ shared }) {
   window.useLang();
-  const { type, setType, amount, setAmount, category, setCategory, note, setNote, date, setDate, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
+  const { type, setType, amountDisplay, handleAmountInput, category, setCategory, note, setNote, date, setDate, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
   const allItems = type === 'expense' ? allExpItems : allIncItems;
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -128,7 +232,7 @@ function EntryFormSplit({ shared }) {
       </div>
       <div style={{ border: `1.5px solid ${type === 'income' ? 'var(--income)' : 'var(--expense)'}`, borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--bg)' }}>
         <span className="mono" style={{ fontSize: 22, color: 'var(--text-3)', fontWeight: 500 }}>{window.currencySymbol(currency)}</span>
-        <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0.00" className="mono"
+        <input value={amountDisplay} onChange={e => handleAmountInput(e.target.value)} placeholder="0.00" inputMode="numeric" className="mono"
           style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 36, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text)', padding: 0 }} />
         <span className="mono" style={{ fontSize: 12, color: 'var(--text-3)' }}>{currency}</span>
       </div>
@@ -147,7 +251,7 @@ function EntryFormSplit({ shared }) {
           <DateButton value={date} onChange={setDate} />
         </div>
       </div>
-      <button className="btn btn-primary" style={{ alignSelf: 'stretch' }} onClick={() => handleSave()} disabled={!amount || !category || saving || saved}>
+      <button className="btn btn-primary" style={{ alignSelf: 'stretch' }} onClick={() => handleSave()} disabled={!amountDisplay || !category || saving || saved}>
         <HI.check size={14} /> {saving ? window.t('saving') : saved ? window.t('saved') : window.t('save_txn')}
       </button>
     </div>
@@ -160,6 +264,7 @@ function HomeSplit({ shared }) {
       <EntryFormSplit shared={shared} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
         <SummaryStrip stats={shared.stats} currency={shared.currency} />
+        <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} />
         <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
       </div>
     </div>
@@ -168,7 +273,7 @@ function HomeSplit({ shared }) {
 
 function HomeHero({ shared }) {
   window.useLang();
-  const { type, setType, amount, setAmount, category, setCategory, note, setNote, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
+  const { type, setType, amountDisplay, handleAmountInput, category, setCategory, note, setNote, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
   const allItems = type === 'expense' ? allExpItems : allIncItems;
   const locale = window._i18nLocale || 'en-US';
   return (
@@ -180,8 +285,8 @@ function HomeHero({ shared }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 0, justifyContent: 'center' }}>
           <span className="mono" style={{ fontSize: 72, color: type === 'income' ? 'var(--income)' : 'var(--text-3)', fontWeight: 600, lineHeight: 1, letterSpacing: '-0.04em', fontFamily: 'Inter' }}>{window.currencySymbol(currency)}</span>
-          <input value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0.00" className="mono"
-            style={{ border: 0, outline: 'none', background: 'transparent', fontSize: 96, fontWeight: 700, letterSpacing: '-0.04em', color: type === 'income' ? 'var(--income)' : 'var(--text)', width: `${Math.max(4, (amount || '0.00').length)}ch`, maxWidth: '60vw', textAlign: 'left', padding: 0, lineHeight: 1 }} />
+          <input value={amountDisplay} onChange={e => handleAmountInput(e.target.value)} placeholder="0.00" inputMode="numeric" className="mono"
+            style={{ border: 0, outline: 'none', background: 'transparent', fontSize: 96, fontWeight: 700, letterSpacing: '-0.04em', color: type === 'income' ? 'var(--income)' : 'var(--text)', width: `${Math.max(4, (amountDisplay || '0.00').length)}ch`, maxWidth: '60vw', textAlign: 'left', padding: 0, lineHeight: 1 }} />
         </div>
         <div style={{ fontSize: 13, color: 'var(--text-3)' }} className="mono">
           {currency} · {htoday.toLocaleDateString(locale, { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -192,12 +297,13 @@ function HomeHero({ shared }) {
         </div>
         <div style={{ display: 'flex', gap: 10, width: 'min(420px, 90%)' }}>
           <input className="input" placeholder={window.t('optional')} style={{ flex: 1 }} value={note} onChange={e => setNote(e.target.value)} />
-          <button className="btn btn-primary btn-lg" onClick={() => handleSave()} disabled={!amount || !category || saving || saved}>
+          <button className="btn btn-primary btn-lg" onClick={() => handleSave()} disabled={!amountDisplay || !category || saving || saved}>
             <HI.check size={14} /> {saving ? window.t('saving') : saved ? window.t('saved') : window.t('save')}
           </button>
         </div>
       </div>
       <SummaryStrip stats={shared.stats} currency={shared.currency} />
+      <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} />
       <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
     </div>
   );
@@ -205,11 +311,11 @@ function HomeHero({ shared }) {
 
 function HomeCalc({ shared }) {
   window.useLang();
-  const { type, setType, amount, setAmount, category, setCategory, note, setNote, date, setDate, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
+  const { type, setType, amount, setAmount, amountDisplay, category, setCategory, note, setNote, date, setDate, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
   const allItems = type === 'expense' ? allExpItems : allIncItems;
   const press = k => {
     if (k === '⌫') { setAmount(a => a.slice(0, -1)); return; }
-    if (k === '.' && amount.includes('.')) return;
+    if (k === '.') return; // decimal auto-handled by cents
     setAmount(a => a + k);
   };
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'];
@@ -222,14 +328,14 @@ function HomeCalc({ shared }) {
         </div>
         <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border-soft)', borderRadius: 12, padding: '18px 20px', textAlign: 'right' }}>
           <div className="mono" style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('amount')}</div>
-          <div className="mono" style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.03em', color: type === 'income' ? 'var(--income)' : 'var(--expense)' }}>{window.currencySymbol(currency)}{amount || '0.00'}</div>
+          <div className="mono" style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.03em', color: type === 'income' ? 'var(--income)' : 'var(--expense)' }}>{window.currencySymbol(currency)}{amountDisplay || '0.00'}</div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
           {keys.map(k => (
             <button key={k} onClick={() => press(k)} style={{ padding: '14px 0', borderRadius: 10, background: 'var(--bg-warm)', border: '1px solid var(--border-soft)', fontSize: 18, fontWeight: 600, fontFamily: 'var(--mono)', color: 'var(--text)' }}>{k}</button>
           ))}
         </div>
-        <button className="btn btn-primary btn-lg" onClick={() => handleSave()} disabled={!amount || !category || saving || saved}>
+        <button className="btn btn-primary btn-lg" onClick={() => handleSave()} disabled={!amountDisplay || !category || saving || saved}>
           <HI.check size={14} /> {saving ? window.t('saving') : saved ? window.t('saved') : window.t('save_txn')}
         </button>
       </div>
@@ -252,26 +358,108 @@ function HomeCalc({ shared }) {
   );
 }
 
+function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage }) {
+  window.useLang();
+  const { grade = '—', savingsRate = 0 } = stats;
+  if (grade === '—') return null;
+
+  const gradeColor = { A: 'var(--income)', B: 'var(--teal)', C: '#c8a015', D: 'var(--warn)', F: 'var(--expense)' }[grade] || 'var(--text-3)';
+  const gradeLabel = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'At Risk', F: 'Critical' }[grade];
+
+  const catMap = {};
+  liveTxns.filter(t => t.type === 'expense').forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
+  const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+  const totalExp = topCats.reduce((s, [, v]) => s + v, 0);
+  const monthInc = liveTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const maxBar = Math.max(monthInc, totalExp, 1);
+
+  return (
+    <div className="card" style={{ padding: '18px 20px' }}>
+      <div className="card-head" style={{ marginBottom: 16 }}>
+        <div className="card-title">This month</div>
+        <button className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 8px', color: 'var(--accent)' }} onClick={() => setPage?.('report')}>
+          Full report <HI.arrow_right size={12} />
+        </button>
+      </div>
+
+      {/* Grade row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+        <div style={{ width: 56, height: 56, borderRadius: 14, background: `color-mix(in srgb, ${gradeColor} 12%, transparent)`, border: `2px solid ${gradeColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 800, lineHeight: 1, color: gradeColor }}>{grade}</span>
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: gradeColor }}>{gradeLabel}</div>
+          <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{savingsRate}% savings rate</div>
+        </div>
+      </div>
+
+      {/* Income vs expenses bar */}
+      {(monthInc > 0 || totalExp > 0) && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ height: 7, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden', display: 'flex', gap: 2 }}>
+            <div style={{ width: `${monthInc / maxBar * 100}%`, background: 'var(--income)', borderRadius: 99, minWidth: monthInc > 0 ? 4 : 0 }} />
+            <div style={{ width: `${totalExp / maxBar * 100}%`, background: 'var(--expense)', borderRadius: 99, minWidth: totalExp > 0 ? 4 : 0 }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--income)' }}>+{window.fmtCurrency(monthInc, currency, 0)}</span>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense)' }}>−{window.fmtCurrency(totalExp, currency, 0)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Top categories */}
+      {topCats.slice(0, 3).map(([cat, val], i) => (
+        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: i === 0 ? '1px solid var(--border-soft)' : 'none' }}>
+          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--expense-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--expense)' }}>#{i + 1}</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</div>
+            <div style={{ height: 3, borderRadius: 99, background: 'var(--border-soft)', marginTop: 4, overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: 99, background: 'var(--expense)', width: `${Math.round(val / totalExp * 100)}%`, opacity: 0.7 }} />
+            </div>
+          </div>
+          <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense)', flexShrink: 0 }}>−{window.fmtCurrency(val, currency, 0)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SummaryStrip({ compact, stats = {}, currency = 'USD' }) {
   window.useLang();
   const { todayNet = 0, todayCount = 0, monthExp = 0, savingsRate = 0, grade = '—' } = stats;
+  const base = compact ? 22 : 28;
+  const autoSize = text => {
+    const n = (text || '').length;
+    if (n <= 7)  return base;
+    if (n <= 9)  return Math.round(base * 0.82);
+    if (n <= 11) return Math.round(base * 0.68);
+    if (n <= 13) return Math.round(base * 0.57);
+    if (n <= 15) return Math.round(base * 0.5);
+    return Math.round(base * 0.43);
+  };
+  const todayNetStr = (todayNet >= 0 ? '+' : '−') + window.fmtCurrency(todayNet, currency);
+  const monthExpStr = window.fmtCurrency(monthExp, currency);
+  const savingsStr = savingsRate + '%';
+  const valueStyle = { fontWeight: 700, letterSpacing: '-0.025em', marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' };
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-      <div className="card" style={{ padding: compact ? 14 : 18 }}>
+      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('todays_net')}</div>
-        <div className="mono" style={{ fontSize: compact ? 22 : 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 4, color: todayNet >= 0 ? 'var(--income)' : 'var(--expense)' }}>
-          {todayNet >= 0 ? '+' : '−'}{window.fmtCurrency(todayNet, currency)}
+        <div className="mono" style={{ ...valueStyle, fontSize: autoSize(todayNetStr), color: todayNet >= 0 ? 'var(--income)' : 'var(--expense)' }}>
+          {todayNetStr}
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{todayCount} {todayCount === 1 ? window.t('entry') : window.t('entries')}</div>
       </div>
-      <div className="card" style={{ padding: compact ? 14 : 18 }}>
+      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('this_month')}</div>
-        <div className="mono" style={{ fontSize: compact ? 22 : 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 4 }}>{window.fmtCurrency(monthExp, currency)}</div>
+        <div className="mono" style={{ ...valueStyle, fontSize: autoSize(monthExpStr) }}>{monthExpStr}</div>
         <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{window.t('total_expenses')}</div>
       </div>
-      <div className="card" style={{ padding: compact ? 14 : 18 }}>
+      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('savings_rate')}</div>
-        <div className="mono" style={{ fontSize: compact ? 22 : 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 4 }}>{savingsRate}%</div>
+        <div className="mono" style={{ ...valueStyle, fontSize: autoSize(savingsStr) }}>{savingsStr}</div>
         <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>{window.t('grade')} {grade}</div>
       </div>
     </div>
@@ -321,6 +509,16 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
   const [saved, setSaved] = React.useState(false);
   const [liveTxns, setLiveTxns] = React.useState([]);
 
+  // Treat `amount` as raw digit string (cents). "768889" → $7,688.89
+  const amountDisplay = React.useMemo(() => {
+    if (!amount) return '';
+    const padded = amount.padStart(3, '0');
+    const whole = parseInt(padded.slice(0, -2), 10);
+    const dec = padded.slice(-2);
+    return whole.toLocaleString(window._i18nLocale || 'en-US') + '.' + dec;
+  }, [amount]);
+  const handleAmountInput = v => setAmount(v.replace(/[^0-9]/g, ''));
+
   const [recentExp, setRecentExp] = React.useState(() => loadRecent('expense'));
   const [recentInc, setRecentInc] = React.useState(() => loadRecent('income'));
 
@@ -356,12 +554,13 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
   }, [liveTxns]);
 
   const handleSave = async () => {
-    if (!amount || parseFloat(amount) <= 0 || !category || !userId || saving) return;
+    const amountVal = parseInt(amount || '0', 10) / 100;
+    if (!amount || amountVal <= 0 || !category || !userId || saving) return;
     setSaving(true);
 
     const { data } = await window.SupabaseClient
       .from('transactions')
-      .insert({ user_id: userId, amount: parseFloat(amount), type, category, note: note || null, date, currency })
+      .insert({ user_id: userId, amount: amountVal, type, category, note: note || null, date, currency })
       .select()
       .single();
 
@@ -383,8 +582,9 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
   };
 
   const shared = {
-    type, setType, amount, setAmount, category, setCategory,
-    note, setNote, date, setDate, saving, saved, handleSave,
+    type, setType, amount, setAmount, amountDisplay, handleAmountInput,
+    category, setCategory, note, setNote, date, setDate,
+    saving, saved, handleSave,
     allExpItems, allIncItems, liveTxns, stats, setPage, currency,
   };
 

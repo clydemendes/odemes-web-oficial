@@ -64,7 +64,7 @@ function Sidebar({ page, setPage, collapsed, onToggleCollapse, counts = {}, user
           <button key={it.id} className={`side-item ${page === it.id ? 'active' : ''}`} onClick={() => setPage(it.id)}>
             <Ico className="ico" />
             <span>{it.label}</span>
-            {it.pill && <span className="pill">{it.pill}</span>}
+            {it.pill > 0 && <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 600, color: 'var(--text-3)' }}>{it.pill}</span>}
           </button>);
 
       })}
@@ -173,7 +173,7 @@ function MobileTabBar({ page, setPage, counts = {} }) {
           >
             <Ico className="ico" />
             <span>{it.label}</span>
-            {it.pill > 0 && <span className="mobile-tab-bar-pill">{it.pill > 99 ? '99+' : it.pill}</span>}
+            {it.pill > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)' }}>{it.pill > 99 ? '99+' : it.pill}</span>}
           </button>
         );
       })}

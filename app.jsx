@@ -116,6 +116,9 @@ function App() {
     const { data: { subscription } } = sb.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         applySession(session);
+      } else if (event === 'USER_UPDATED') {
+        // Refresh user object so updated metadata (e.g. full_name) is reflected immediately
+        if (session?.user) setUser(session.user);
       } else if (event === 'SIGNED_OUT') {
         applySession(null);
       }

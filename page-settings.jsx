@@ -36,6 +36,10 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
   window.useLang();
   const [tab, setTab] = React.useState('account');
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [editingName, setEditingName] = React.useState(false);
+  const [nameInput, setNameInput] = React.useState('');
+  const [nameSaving, setNameSaving] = React.useState(false);
+  const [nameError, setNameError] = React.useState('');
 
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
   const email = user?.email || '';
@@ -47,6 +51,21 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
   const lastSignIn = user?.last_sign_in_at
     ? new Date(user.last_sign_in_at).toLocaleDateString(locale, { month: 'long', day: 'numeric', year: 'numeric' })
     : '';
+
+  const saveName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    setNameSaving(true);
+    setNameError('');
+    const { error } = await window.SupabaseClient.auth.updateUser({ data: { full_name: trimmed } });
+    if (error) {
+      setNameError(error.message);
+    } else {
+      if (userId) window.SupabaseClient.from('profiles').update({ full_name: trimmed }).eq('id', userId);
+      setEditingName(false);
+    }
+    setNameSaving(false);
+  };
 
   const syncTweak = (key, value) => {
     setTweak(key, value);
@@ -137,8 +156,36 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
               <SectionHead title={window.t('s_account')} desc={window.t('s_account_desc')} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--border-soft)' }}>
                 <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, var(--accent), var(--accent-deep))', color: '#fff', fontWeight: 700, fontSize: 18, display: 'grid', placeItems: 'center' }}>{initials}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 15 }}>{displayName}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editingName ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          className="input"
+                          value={nameInput}
+                          onChange={e => setNameInput(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
+                          placeholder="Your name"
+                          autoFocus
+                          style={{ flex: 1 }}
+                        />
+                        <button className="btn btn-primary" onClick={saveName} disabled={nameSaving || !nameInput.trim()} style={{ whiteSpace: 'nowrap' }}>
+                          {nameSaving ? '…' : window.t('save')}
+                        </button>
+                        <button className="btn btn-ghost" onClick={() => { setEditingName(false); setNameError(''); }}>
+                          {window.t('cancel')}
+                        </button>
+                      </div>
+                      {nameError && <div style={{ fontSize: 12, color: 'var(--expense)' }}>{nameError}</div>}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <div style={{ fontWeight: 600, fontSize: 15 }}>{displayName}</div>
+                      <button className="icon-btn" title="Edit name" onClick={() => { setNameInput(displayName); setEditingName(true); }}>
+                        <SI.edit size={13} />
+                      </button>
+                    </div>
+                  )}
                   <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{email}</div>
                   {joinedDate && <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>Joined {joinedDate}</div>}
                 </div>

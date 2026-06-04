@@ -275,8 +275,8 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
                 </div>
               </div>
               {list.map(t => (
-                <button key={t.id} className="txn-item" onClick={() => setModal(t)}
-                  style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', textAlign: 'left' }}
+                <div key={t.id} className="txn-item" onClick={() => setModal(t)}
+                  style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
@@ -291,7 +291,8 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
                   <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 600, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                     {t.type === 'income' ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
                   </div>
-                </button>
+                  <button className="icon-btn" onClick={e => { e.stopPropagation(); setModal(t); }}><TxI.edit size={14} /></button>
+                </div>
               ))}
             </div>
           );

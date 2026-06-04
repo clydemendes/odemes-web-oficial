@@ -74,11 +74,11 @@ function PageAuth() {
   const [error, setError] = React.useState('');
   const [showQR, setShowQR] = React.useState(false);
 
-  const google = async () => {
-    setLoading('google');
+  const signIn = async (provider) => {
+    setLoading(provider);
     setError('');
     const { error: err } = await window.SupabaseClient.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: { redirectTo: window.getAuthRedirectUrl() },
     });
     if (err) { setError(err.message); setLoading(null); }
@@ -147,15 +147,14 @@ function PageAuth() {
             <p>{window.t('auth_sub')}</p>
           </div>
 
-          <button className="auth-oauth" onClick={google} disabled={loading !== null}>
+          <button className="auth-oauth" onClick={() => signIn('google')} disabled={loading !== null}>
             {loading === 'google' ? <span className="auth-spin" /> : <GoogleMark />}
             <span>{loading === 'google' ? window.t('connecting') : window.t('continue_google')}</span>
           </button>
 
-          <button className="auth-oauth auth-oauth-apple" disabled>
-            <AppleMark />
-            <span>{window.t('continue_apple')}</span>
-            <span className="auth-soon">{window.t('soon')}</span>
+          <button className="auth-oauth auth-oauth-apple" onClick={() => signIn('apple')} disabled={loading !== null}>
+            {loading === 'apple' ? <span className="auth-spin" /> : <AppleMark />}
+            <span>{loading === 'apple' ? window.t('connecting') : window.t('continue_apple')}</span>
           </button>
 
           {error && (

@@ -129,8 +129,9 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
       const rows = lines.slice(1).map(line => {
         const cols = parseCSVRow(line);
         const amount = parseFloat(cols[amtIdx]);
-        return { user_id: userId, date: cols[dateIdx], type: cols[typeIdx], category: cols[catIdx] || '', note: cols[noteIdx] || null, amount, currency };
-      }).filter(r => r.date && r.type && !isNaN(r.amount));
+        const type = (cols[typeIdx] || '').trim().toLowerCase();
+        return { user_id: userId, date: cols[dateIdx], type, category: cols[catIdx] || '', note: cols[noteIdx] || null, amount, currency };
+      }).filter(r => r.date && (r.type === 'income' || r.type === 'expense') && !isNaN(r.amount));
       if (!rows.length) { setImportResult({ error: 'No valid rows to import.' }); setImportState('idle'); return; }
       const { error } = await window.SupabaseClient.from('transactions').insert(rows);
       if (error) setImportResult({ error: error.message });

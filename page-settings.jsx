@@ -32,6 +32,26 @@ function getInitials(name) {
   return parts[0].slice(0, 2).toUpperCase();
 }
 
+function parseCSVRow(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
 function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
   window.useLang();
   const [tab, setTab] = React.useState('account');
@@ -40,6 +60,9 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
   const [nameInput, setNameInput] = React.useState('');
   const [nameSaving, setNameSaving] = React.useState(false);
   const [nameError, setNameError] = React.useState('');
+  const [importState, setImportState] = React.useState('idle'); // idle | importing
+  const [importResult, setImportResult] = React.useState(null); // { count } | { error }
+  const importInputRef = React.useRef(null);
 
   const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
   const email = user?.email || '';
@@ -80,6 +103,42 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
     if (key === 'currency') sb.from('profiles').update({ currency: value }).eq('id', userId);
     if (key === 'language') sb.from('profiles').update({ language: value }).eq('id', userId);
     if (key === 'theme')    sb.from('profiles').update({ dark_mode: value === 'dark' }).eq('id', userId);
+  };
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!userId || !file) return;
+    setImportResult(null);
+    setImportState('importing');
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').map(l => l.trimEnd()).filter(l => l.trim());
+      if (lines.length < 2) { setImportResult({ error: 'No data rows found.' }); setImportState('idle'); return; }
+      const headers = parseCSVRow(lines[0]).map(h => h.toLowerCase().trim());
+      const dateIdx = headers.indexOf('date');
+      const typeIdx = headers.indexOf('type');
+      const catIdx  = headers.indexOf('category');
+      const noteIdx = headers.indexOf('note');
+      const amtIdx  = headers.indexOf('amount');
+      if (dateIdx === -1 || typeIdx === -1 || amtIdx === -1) {
+        setImportResult({ error: 'Invalid CSV. Expected columns: Date, Type, Category, Note, Amount.' });
+        setImportState('idle'); return;
+      }
+      const currency = tweaks.currency || 'USD';
+      const rows = lines.slice(1).map(line => {
+        const cols = parseCSVRow(line);
+        const amount = parseFloat(cols[amtIdx]);
+        return { user_id: userId, date: cols[dateIdx], type: cols[typeIdx], category: cols[catIdx] || '', note: cols[noteIdx] || null, amount, currency };
+      }).filter(r => r.date && r.type && !isNaN(r.amount));
+      if (!rows.length) { setImportResult({ error: 'No valid rows to import.' }); setImportState('idle'); return; }
+      const { error } = await window.SupabaseClient.from('transactions').insert(rows);
+      if (error) setImportResult({ error: error.message });
+      else setImportResult({ count: rows.length });
+    } catch (err) {
+      setImportResult({ error: err.message });
+    }
+    setImportState('idle');
   };
 
   const exportCSV = async () => {
@@ -269,6 +328,24 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
                   <button className="btn btn-secondary" onClick={exportCSV}>
                     <SI.download size={14} /> {window.t('export_btn')}
                   </button>
+                }
+              />
+              <Row
+                title={window.t('import_csv')}
+                sub={
+                  importResult
+                    ? importResult.error
+                      ? <span style={{ color: 'var(--expense)' }}>{importResult.error}</span>
+                      : <span style={{ color: 'var(--income)' }}>{window.t('import_success').replace('{n}', importResult.count)}</span>
+                    : window.t('import_csv_sub')
+                }
+                control={
+                  <>
+                    <input ref={importInputRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleImportFile} />
+                    <button className="btn btn-secondary" onClick={() => { setImportResult(null); importInputRef.current?.click(); }} disabled={importState === 'importing'}>
+                      <SI.upload size={14} /> {importState === 'importing' ? '…' : window.t('import_btn')}
+                    </button>
+                  </>
                 }
               />
               <Row

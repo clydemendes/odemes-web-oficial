@@ -153,9 +153,6 @@ function PageReport({ userId, currency = 'USD' }) {
   const [period, setPeriod] = React.useState('month');
   const [customFrom, setCustomFrom] = React.useState('');
   const [customTo, setCustomTo] = React.useState('');
-  const [trendPeriod, setTrendPeriod] = React.useState('month');
-  const [trendFrom, setTrendFrom] = React.useState('');
-  const [trendTo, setTrendTo] = React.useState('');
   const [allTxns, setAllTxns] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const locale = window._i18nLocale || 'en-US';
@@ -174,7 +171,25 @@ function PageReport({ userId, currency = 'USD' }) {
   }, [userId]);
 
   const SERIES = React.useMemo(() => {
-    if (trendPeriod === 'week') {
+    const mkMonths = (count) => {
+      const months = [];
+      for (let i = count - 1; i >= 0; i--) {
+        const d = new Date(rpToday.getFullYear(), rpToday.getMonth() - i, 1);
+        const prefix = _rMonthPfx(d);
+        const opts = { month: 'short' };
+        if (d.getFullYear() !== rpToday.getFullYear()) opts.year = '2-digit';
+        const label = d.toLocaleDateString(locale, opts);
+        const mt = allTxns.filter(t => t.date.startsWith(prefix));
+        months.push({
+          month: label,
+          income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+          expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+        });
+      }
+      return months;
+    };
+
+    if (period === 'week') {
       const days = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(rpToday); d.setDate(d.getDate() - i);
@@ -190,25 +205,34 @@ function PageReport({ userId, currency = 'USD' }) {
       return days;
     }
 
-    if (trendPeriod === 'year') {
+    if (period === 'year') return mkMonths(12);
+
+    if (period === 'overall') {
+      if (allTxns.length === 0) return mkMonths(6);
+      const oldest = allTxns.reduce((min, t) => t.date < min ? t.date : min, allTxns[0].date);
+      const start = new Date(oldest.slice(0, 7) + '-01T00:00:00');
       const months = [];
-      for (let i = 11; i >= 0; i--) {
-        const d = new Date(rpToday.getFullYear(), rpToday.getMonth() - i, 1);
-        const prefix = _rMonthPfx(d);
-        const label = d.toLocaleDateString(locale, { month: 'short' });
+      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+      const endM = new Date(rpToday.getFullYear(), rpToday.getMonth(), 1);
+      while (cur <= endM) {
+        const prefix = _rMonthPfx(cur);
+        const opts = { month: 'short' };
+        if (cur.getFullYear() !== rpToday.getFullYear()) opts.year = '2-digit';
+        const label = cur.toLocaleDateString(locale, opts);
         const mt = allTxns.filter(t => t.date.startsWith(prefix));
         months.push({
           month: label,
           income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
           expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
         });
+        cur.setMonth(cur.getMonth() + 1);
       }
       return months;
     }
 
-    if (trendPeriod === 'custom' && trendFrom && trendTo && trendFrom <= trendTo) {
-      const from = new Date(trendFrom + 'T00:00:00');
-      const to = new Date(trendTo + 'T00:00:00');
+    if (period === 'custom' && customFrom && customTo && customFrom <= customTo) {
+      const from = new Date(customFrom + 'T00:00:00');
+      const to = new Date(customTo + 'T00:00:00');
       const diffDays = Math.round((to - from) / 86400000) + 1;
 
       if (diffDays <= 62) {
@@ -234,7 +258,7 @@ function PageReport({ userId, currency = 'USD' }) {
           const opts = { month: 'short' };
           if (cur.getFullYear() !== rpToday.getFullYear()) opts.year = '2-digit';
           const label = cur.toLocaleDateString(locale, opts);
-          const mt = allTxns.filter(t => t.date.startsWith(prefix) && t.date >= trendFrom && t.date <= trendTo);
+          const mt = allTxns.filter(t => t.date.startsWith(prefix) && t.date >= customFrom && t.date <= customTo);
           months.push({
             month: label,
             income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
@@ -246,21 +270,9 @@ function PageReport({ userId, currency = 'USD' }) {
       }
     }
 
-    // Default: 6 months
-    const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(rpToday.getFullYear(), rpToday.getMonth() - i, 1);
-      const prefix = _rMonthPfx(d);
-      const label = d.toLocaleDateString(locale, { month: 'short' });
-      const mt = allTxns.filter(t => t.date.startsWith(prefix));
-      months.push({
-        month: label,
-        income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
-        expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
-      });
-    }
-    return months;
-  }, [allTxns, locale, trendPeriod, trendFrom, trendTo]);
+    // Default: month → 6-month view
+    return mkMonths(6);
+  }, [allTxns, locale, period, customFrom, customTo]);
 
   const RT = React.useMemo(() => filterByPeriod(allTxns, period, customFrom, customTo), [allTxns, period, customFrom, customTo]);
 
@@ -319,9 +331,10 @@ function PageReport({ userId, currency = 'USD' }) {
     : period === 'year' ? String(rpToday.getFullYear())
     : rpToday.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 
-  const trendTitle = trendPeriod === 'week' ? window.t('last_7_days')
-    : trendPeriod === 'year' ? '12-month trend'
-    : trendPeriod === 'custom' ? window.t('custom') + ' trend'
+  const trendTitle = period === 'week' ? window.t('last_7_days')
+    : period === 'year' ? '12-month trend'
+    : period === 'overall' ? 'All-time trend'
+    : period === 'custom' ? (customFrom && customTo ? `${customFrom} – ${customTo}` : window.t('custom') + ' trend')
     : window.t('mo6_trend');
 
   const gradeArcLen = Math.max(savings, 0.03) * 2 * Math.PI * 68;
@@ -344,20 +357,6 @@ function PageReport({ userId, currency = 'USD' }) {
     { id: 'overall', label: window.t('overall') },
     { id: 'custom', label: window.t('custom') },
   ];
-
-  const TREND_PERIODS = [
-    { id: 'week', label: window.t('week') },
-    { id: 'month', label: window.t('month') },
-    { id: 'year', label: window.t('year') },
-    { id: 'custom', label: window.t('custom') },
-  ];
-
-  const pillStyle = p => ({
-    padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
-    background: trendPeriod === p ? 'var(--accent)' : 'transparent',
-    color: trendPeriod === p ? '#fff' : 'var(--text-2)',
-    transition: 'background 120ms, color 120ms',
-  });
 
   return (
     <div className="page">
@@ -432,7 +431,7 @@ function PageReport({ userId, currency = 'USD' }) {
 
           {/* Trend chart */}
           <div className="card">
-            <div className="card-head" style={{ marginBottom: 6 }}>
+            <div className="card-head">
               <div>
                 <div className="card-title">{trendTitle}</div>
                 <div className="card-sub">{window.t('income_vs_exp')}</div>
@@ -448,21 +447,6 @@ function PageReport({ userId, currency = 'USD' }) {
                 </span>
               </div>
             </div>
-
-            {/* Trend period selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', background: 'var(--bg-warm)', borderRadius: 8, padding: 2, gap: 2, border: '1px solid var(--border-soft)' }}>
-                {TREND_PERIODS.map(p => (
-                  <button key={p.id} onClick={() => setTrendPeriod(p.id)} style={pillStyle(p.id)}>
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-              {trendPeriod === 'custom' && (
-                <DateRangePicker from={trendFrom} to={trendTo} onFrom={setTrendFrom} onTo={setTrendTo} />
-              )}
-            </div>
-
             <div style={{ padding: '2px 0 0' }}>
               <TrendChart series={SERIES} />
             </div>

@@ -41,7 +41,8 @@ function smoothPath(pts) {
   return d;
 }
 
-function TrendChart({ series }) {
+function TrendChart({ series, currency = 'USD' }) {
+  const [hovered, setHovered] = React.useState(null);
   const W = 540, H = 200;
   const pad = { t: 18, r: 20, b: 32, l: 42 };
   const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
@@ -61,11 +62,33 @@ function TrendChart({ series }) {
   const expArea = expPts.length ? `${expLine} L ${expPts[expPts.length-1][0]},${bottom} L ${expPts[0][0]},${bottom} Z` : '';
 
   const ticks = [0, 0.25, 0.5, 0.75, 1];
-
-  // Skip x-axis labels when dense
   const maxLabels = 10;
   const step = n > maxLabels ? Math.ceil(n / maxLabels) : 1;
   const showLabel = i => i % step === 0 || i === n - 1;
+
+  const tooltip = React.useMemo(() => {
+    if (hovered === null) return null;
+    const s = series[hovered];
+    const x = px(hovered);
+    const lines = [];
+    if (s.income > 0) lines.push({ label: 'Income', value: `+${window.fmtCurrency(s.income, currency, 0)}`, color: '#1aae39' });
+    if (s.expenses > 0) lines.push({ label: 'Expense', value: `−${window.fmtCurrency(s.expenses, currency, 0)}`, color: '#C62828' });
+    if (!lines.length) return null;
+
+    const tp = 10, lh = 18, ttW = 148;
+    const ttH = tp * 2 + 14 + lines.length * lh;
+    const topY = Math.min(
+      s.income > 0 ? py(s.income) : Infinity,
+      s.expenses > 0 ? py(s.expenses) : Infinity
+    );
+    let tx = x - ttW / 2;
+    let ty = topY - ttH - 10;
+    if (tx < 2) tx = 2;
+    if (tx + ttW > W - 2) tx = W - 2 - ttW;
+    if (ty < 2) ty = topY + 14;
+
+    return { x, tx, ty, ttW, ttH, tp, lh, s, lines };
+  }, [hovered, series, currency]);
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
@@ -79,11 +102,6 @@ function TrendChart({ series }) {
           <stop offset="100%" stopColor="#C62828" stopOpacity="0" />
         </linearGradient>
       </defs>
-
-      {n > 0 && (
-        <rect x={px(n - 1) - cW / n / 2} y={pad.t} width={cW / n} height={cH}
-          style={{ fill: 'var(--bg-warm)', opacity: 0.5 }} rx="5" />
-      )}
 
       {ticks.map((frac, i) => {
         const y = pad.t + frac * cH;
@@ -107,13 +125,35 @@ function TrendChart({ series }) {
       <path d={incLine} fill="none" stroke="#1aae39" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d={expLine} fill="none" stroke="#C62828" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 
-      {incPts.map(([x, y], i) => series[i].income > 0 && (
-        <circle key={`id${i}`} cx={x} cy={y} r="3" fill="#1aae39" style={{ stroke: 'var(--bg)' }} strokeWidth="1.5" />
-      ))}
-      {expPts.map(([x, y], i) => series[i].expenses > 0 && (
-        <circle key={`ed${i}`} cx={x} cy={y} r="3" fill="#C62828" style={{ stroke: 'var(--bg)' }} strokeWidth="1.5" />
-      ))}
+      {/* Hover vertical line */}
+      {hovered !== null && (
+        <line x1={px(hovered)} y1={pad.t} x2={px(hovered)} y2={bottom}
+          stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"
+          style={{ pointerEvents: 'none' }} />
+      )}
 
+      {/* Dots with hover areas */}
+      {series.map((s, i) => {
+        const isHov = hovered === i;
+        return (
+          <g key={i} style={{ cursor: 'default' }}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}>
+            {/* Invisible wide hit target */}
+            <rect x={px(i) - 14} y={pad.t} width={28} height={cH} fill="transparent" />
+            {s.income > 0 && (
+              <circle cx={px(i)} cy={py(s.income)} r={isHov ? 4.5 : 3}
+                fill="#1aae39" style={{ stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
+            )}
+            {s.expenses > 0 && (
+              <circle cx={px(i)} cy={py(s.expenses)} r={isHov ? 4.5 : 3}
+                fill="#C62828" style={{ stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
+            )}
+          </g>
+        );
+      })}
+
+      {/* X-axis labels */}
       {series.map((s, i) => showLabel(i) && (
         <text key={i} x={px(i)} y={H - 5} textAnchor="middle"
           style={{
@@ -124,6 +164,34 @@ function TrendChart({ series }) {
           {s.month}
         </text>
       ))}
+
+      {/* Tooltip */}
+      {tooltip && (() => {
+        const { tx, ty, ttW, ttH, tp, lh, s, lines } = tooltip;
+        return (
+          <g style={{ pointerEvents: 'none' }}>
+            <rect x={tx} y={ty} width={ttW} height={ttH} rx="7"
+              fill="var(--bg)" stroke="var(--border)" strokeWidth="1"
+              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.14))' }} />
+            <text x={tx + tp} y={ty + tp + 10} textAnchor="start"
+              style={{ fontSize: 10, fontWeight: 600, fill: 'var(--text-3)', fontFamily: 'var(--font)' }}>
+              {s.month}
+            </text>
+            {lines.map((line, i) => (
+              <g key={i}>
+                <text x={tx + tp} y={ty + tp + 14 + (i + 1) * lh} textAnchor="start"
+                  style={{ fontSize: 10, fill: 'var(--text-3)', fontFamily: 'var(--font)' }}>
+                  {line.label}
+                </text>
+                <text x={tx + ttW - tp} y={ty + tp + 14 + (i + 1) * lh} textAnchor="end"
+                  style={{ fontSize: 11, fontWeight: 700, fill: line.color, fontFamily: 'var(--mono)' }}>
+                  {line.value}
+                </text>
+              </g>
+            ))}
+          </g>
+        );
+      })()}
     </svg>
   );
 }
@@ -417,7 +485,7 @@ function PageReport({ userId, currency = 'USD' }) {
             </div>
             <div className="mono" style={{ fontSize: 28, fontWeight: 700, marginTop: 14, color: gradeColor, letterSpacing: '-0.02em' }}>{savingsPct}%</div>
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('savings_rate')}</div>
-            <div style={{ width: '100%', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-soft)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ width: '100%', marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--border-soft)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('income')}</div>
                 <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--income)', marginTop: 2 }}>+{window.fmtCurrency(incomeSum, currency, 0)}</div>
@@ -448,7 +516,7 @@ function PageReport({ userId, currency = 'USD' }) {
               </div>
             </div>
             <div style={{ padding: '2px 0 0' }}>
-              <TrendChart series={SERIES} />
+              <TrendChart series={SERIES} currency={currency} />
             </div>
           </div>
         </div>

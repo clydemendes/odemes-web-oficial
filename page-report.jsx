@@ -2,15 +2,25 @@
 const { Icons: RpI } = window;
 const { today: rpToday } = window.OdemesData;
 
-function filterByPeriod(txns, period) {
-  const base = rpToday;
-  if (period === 'year') return txns.filter(t => t.date.startsWith(String(base.getFullYear())));
-  if (period === 'month') return txns.filter(t => t.date.startsWith(base.toISOString().slice(0, 7)));
+// Local-timezone date helpers (avoids UTC-conversion bugs)
+const _rpad = n => String(n).padStart(2, '0');
+const _rLocalStr = d => `${d.getFullYear()}-${_rpad(d.getMonth() + 1)}-${_rpad(d.getDate())}`;
+const _rMonthPfx = d => `${d.getFullYear()}-${_rpad(d.getMonth() + 1)}`;
+const _rTodayStr = _rLocalStr(rpToday);
+const _rThisMonth = _rMonthPfx(rpToday);
+
+function filterByPeriod(txns, period, customFrom, customTo) {
+  if (period === 'overall') return txns;
+  if (period === 'custom') {
+    if (!customFrom && !customTo) return txns;
+    return txns.filter(t => (!customFrom || t.date >= customFrom) && (!customTo || t.date <= customTo));
+  }
+  if (period === 'year') return txns.filter(t => t.date.startsWith(String(rpToday.getFullYear())));
+  if (period === 'month') return txns.filter(t => t.date.startsWith(_rThisMonth));
   if (period === 'week') {
-    const end = base.toISOString().slice(0, 10);
-    const start = new Date(base); start.setDate(start.getDate() - 6);
-    const from = start.toISOString().slice(0, 10);
-    return txns.filter(t => t.date >= from && t.date <= end);
+    const start = new Date(rpToday); start.setDate(start.getDate() - 6);
+    const from = _rLocalStr(start);
+    return txns.filter(t => t.date >= from && t.date <= _rTodayStr);
   }
   return txns;
 }
@@ -32,8 +42,8 @@ function smoothPath(pts) {
 }
 
 function TrendChart({ series }) {
-  const W = 540, H = 210;
-  const pad = { t: 20, r: 24, b: 36, l: 48 };
+  const W = 540, H = 200;
+  const pad = { t: 18, r: 20, b: 32, l: 42 };
   const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
   const n = series.length;
   const maxVal = Math.max(...series.flatMap(s => [s.income, s.expenses]), 1);
@@ -47,31 +57,34 @@ function TrendChart({ series }) {
   const expLine = smoothPath(expPts);
   const bottom = pad.t + cH;
 
-  const incArea = `${incLine} L ${incPts[incPts.length - 1][0]},${bottom} L ${incPts[0][0]},${bottom} Z`;
-  const expArea = `${expLine} L ${expPts[expPts.length - 1][0]},${bottom} L ${expPts[0][0]},${bottom} Z`;
+  const incArea = incPts.length ? `${incLine} L ${incPts[incPts.length-1][0]},${bottom} L ${incPts[0][0]},${bottom} Z` : '';
+  const expArea = expPts.length ? `${expLine} L ${expPts[expPts.length-1][0]},${bottom} L ${expPts[0][0]},${bottom} Z` : '';
 
   const ticks = [0, 0.25, 0.5, 0.75, 1];
+
+  // Skip x-axis labels when dense
+  const maxLabels = 10;
+  const step = n > maxLabels ? Math.ceil(n / maxLabels) : 1;
+  const showLabel = i => i % step === 0 || i === n - 1;
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
         <linearGradient id="rp-ig" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1aae39" stopOpacity="0.22" />
+          <stop offset="0%" stopColor="#1aae39" stopOpacity="0.16" />
           <stop offset="100%" stopColor="#1aae39" stopOpacity="0" />
         </linearGradient>
         <linearGradient id="rp-eg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C62828" stopOpacity="0.16" />
+          <stop offset="0%" stopColor="#C62828" stopOpacity="0.11" />
           <stop offset="100%" stopColor="#C62828" stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {/* Highlight current month column */}
       {n > 0 && (
         <rect x={px(n - 1) - cW / n / 2} y={pad.t} width={cW / n} height={cH}
-          style={{ fill: 'var(--bg-warm)', opacity: 0.6 }} rx="6" />
+          style={{ fill: 'var(--bg-warm)', opacity: 0.5 }} rx="5" />
       )}
 
-      {/* Horizontal grid lines */}
       {ticks.map((frac, i) => {
         const y = pad.t + frac * cH;
         const val = maxVal * (1 - frac);
@@ -79,40 +92,32 @@ function TrendChart({ series }) {
           <g key={i}>
             <line x1={pad.l} y1={y} x2={W - pad.r} y2={y}
               style={{ stroke: frac === 1 ? 'var(--border)' : 'var(--border-soft)' }}
-              strokeWidth={frac === 1 ? 1.5 : 1} />
-            <text x={pad.l - 8} y={y + 4} textAnchor="end"
-              style={{ fontSize: 10, fill: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
+              strokeWidth={frac === 1 ? 1 : 0.7} />
+            <text x={pad.l - 6} y={y + 4} textAnchor="end"
+              style={{ fontSize: 9, fill: 'var(--text-3)', fontFamily: 'var(--mono)' }}>
               {frac === 1 ? '0' : shortNum(val)}
             </text>
           </g>
         );
       })}
 
-      {/* Area fills */}
       <path d={incArea} fill="url(#rp-ig)" />
       <path d={expArea} fill="url(#rp-eg)" />
 
-      {/* Lines */}
-      <path d={incLine} fill="none" stroke="#1aae39" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={expLine} fill="none" stroke="#C62828" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={incLine} fill="none" stroke="#1aae39" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={expLine} fill="none" stroke="#C62828" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 
-      {/* Data point dots */}
       {incPts.map(([x, y], i) => series[i].income > 0 && (
-        <g key={`id${i}`}>
-          <circle cx={x} cy={y} r="5" fill="#1aae39" style={{ stroke: 'var(--bg)' }} strokeWidth="2.5" />
-        </g>
+        <circle key={`id${i}`} cx={x} cy={y} r="3" fill="#1aae39" style={{ stroke: 'var(--bg)' }} strokeWidth="1.5" />
       ))}
       {expPts.map(([x, y], i) => series[i].expenses > 0 && (
-        <g key={`ed${i}`}>
-          <circle cx={x} cy={y} r="5" fill="#C62828" style={{ stroke: 'var(--bg)' }} strokeWidth="2.5" />
-        </g>
+        <circle key={`ed${i}`} cx={x} cy={y} r="3" fill="#C62828" style={{ stroke: 'var(--bg)' }} strokeWidth="1.5" />
       ))}
 
-      {/* X-axis month labels */}
-      {series.map((s, i) => (
-        <text key={i} x={px(i)} y={H - 6} textAnchor="middle"
+      {series.map((s, i) => showLabel(i) && (
+        <text key={i} x={px(i)} y={H - 5} textAnchor="middle"
           style={{
-            fontSize: 11, fontWeight: i === n - 1 ? 700 : 500,
+            fontSize: 10, fontWeight: i === n - 1 ? 600 : 400,
             fill: i === n - 1 ? 'var(--text)' : 'var(--text-3)',
             fontFamily: 'var(--font)',
           }}>
@@ -123,7 +128,7 @@ function TrendChart({ series }) {
   );
 }
 
-function KpiCard({ label, value, sub, color, icon }) {
+function KpiCard({ label, value, sub, color }) {
   return (
     <div className="card" style={{ padding: '18px 20px' }}>
       <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{label}</div>
@@ -133,23 +138,34 @@ function KpiCard({ label, value, sub, color, icon }) {
   );
 }
 
+function DateRangePicker({ from, to, onFrom, onTo }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <window.DateButton value={from} onChange={onFrom} />
+      <span style={{ fontSize: 12, color: 'var(--text-3)', fontWeight: 500 }}>—</span>
+      <window.DateButton value={to} onChange={onTo} />
+    </div>
+  );
+}
+
 function PageReport({ userId, currency = 'USD' }) {
   window.useLang();
   const [period, setPeriod] = React.useState('month');
+  const [customFrom, setCustomFrom] = React.useState('');
+  const [customTo, setCustomTo] = React.useState('');
+  const [trendPeriod, setTrendPeriod] = React.useState('month');
+  const [trendFrom, setTrendFrom] = React.useState('');
+  const [trendTo, setTrendTo] = React.useState('');
   const [allTxns, setAllTxns] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const locale = window._i18nLocale || 'en-US';
 
   React.useEffect(() => {
     if (!userId) return;
-    const sixMonthsAgo = new Date(rpToday);
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    const from = sixMonthsAgo.toISOString().slice(0, 10);
     window.SupabaseClient
       .from('transactions')
       .select('id, type, category, amount, date')
       .eq('user_id', userId)
-      .gte('date', from)
       .order('date', { ascending: false })
       .then(({ data }) => {
         if (data) setAllTxns(data.map(t => ({ ...t, amount: parseFloat(t.amount) })));
@@ -158,20 +174,95 @@ function PageReport({ userId, currency = 'USD' }) {
   }, [userId]);
 
   const SERIES = React.useMemo(() => {
+    if (trendPeriod === 'week') {
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(rpToday); d.setDate(d.getDate() - i);
+        const dateStr = _rLocalStr(d);
+        const label = d.toLocaleDateString(locale, { weekday: 'short' });
+        const dt = allTxns.filter(t => t.date === dateStr);
+        days.push({
+          month: label,
+          income: dt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+          expenses: dt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+        });
+      }
+      return days;
+    }
+
+    if (trendPeriod === 'year') {
+      const months = [];
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(rpToday.getFullYear(), rpToday.getMonth() - i, 1);
+        const prefix = _rMonthPfx(d);
+        const label = d.toLocaleDateString(locale, { month: 'short' });
+        const mt = allTxns.filter(t => t.date.startsWith(prefix));
+        months.push({
+          month: label,
+          income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+          expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+        });
+      }
+      return months;
+    }
+
+    if (trendPeriod === 'custom' && trendFrom && trendTo && trendFrom <= trendTo) {
+      const from = new Date(trendFrom + 'T00:00:00');
+      const to = new Date(trendTo + 'T00:00:00');
+      const diffDays = Math.round((to - from) / 86400000) + 1;
+
+      if (diffDays <= 62) {
+        const days = [];
+        for (let i = 0; i < diffDays; i++) {
+          const d = new Date(from); d.setDate(d.getDate() + i);
+          const dateStr = _rLocalStr(d);
+          const label = d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+          const dt = allTxns.filter(t => t.date === dateStr);
+          days.push({
+            month: label,
+            income: dt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+            expenses: dt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+          });
+        }
+        return days;
+      } else {
+        const months = [];
+        const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+        const end = new Date(to.getFullYear(), to.getMonth(), 1);
+        while (cur <= end) {
+          const prefix = _rMonthPfx(cur);
+          const opts = { month: 'short' };
+          if (cur.getFullYear() !== rpToday.getFullYear()) opts.year = '2-digit';
+          const label = cur.toLocaleDateString(locale, opts);
+          const mt = allTxns.filter(t => t.date.startsWith(prefix) && t.date >= trendFrom && t.date <= trendTo);
+          months.push({
+            month: label,
+            income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+            expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+          });
+          cur.setMonth(cur.getMonth() + 1);
+        }
+        return months;
+      }
+    }
+
+    // Default: 6 months
     const months = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(rpToday.getFullYear(), rpToday.getMonth() - i, 1);
-      const prefix = d.toISOString().slice(0, 7);
+      const prefix = _rMonthPfx(d);
       const label = d.toLocaleDateString(locale, { month: 'short' });
       const mt = allTxns.filter(t => t.date.startsWith(prefix));
-      const income   = mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-      const expenses = mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-      months.push({ month: label, income, expenses });
+      months.push({
+        month: label,
+        income: mt.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0),
+        expenses: mt.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0),
+      });
     }
     return months;
-  }, [allTxns, locale]);
+  }, [allTxns, locale, trendPeriod, trendFrom, trendTo]);
 
-  const RT = React.useMemo(() => filterByPeriod(allTxns, period), [allTxns, period]);
+  const RT = React.useMemo(() => filterByPeriod(allTxns, period, customFrom, customTo), [allTxns, period, customFrom, customTo]);
 
   const incomeSum = RT.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
   const expSum    = RT.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
@@ -182,75 +273,113 @@ function PageReport({ userId, currency = 'USD' }) {
   const gradeColor = { A: 'var(--income)', B: 'var(--teal)', C: '#c8a015', D: 'var(--warn)', F: 'var(--expense)' }[grade];
   const gradeLabel = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'At Risk', F: 'Critical' }[grade];
 
-  // Days in period
-  const daysInPeriod = period === 'week' ? 7
-    : period === 'year' ? 365
-    : new Date(rpToday.getFullYear(), rpToday.getMonth() + 1, 0).getDate();
+  let daysInPeriod;
+  if (period === 'week') daysInPeriod = 7;
+  else if (period === 'year') daysInPeriod = 365;
+  else if (period === 'custom') {
+    daysInPeriod = customFrom && customTo
+      ? Math.max(1, Math.round((new Date(customTo + 'T00:00:00') - new Date(customFrom + 'T00:00:00')) / 86400000) + 1)
+      : 30;
+  } else if (period === 'overall') {
+    if (RT.length === 0) { daysInPeriod = 30; }
+    else {
+      const oldest = RT.reduce((min, t) => t.date < min ? t.date : min, RT[0].date);
+      daysInPeriod = Math.max(1, Math.round((rpToday - new Date(oldest + 'T00:00:00')) / 86400000) + 1);
+    }
+  } else {
+    daysInPeriod = new Date(rpToday.getFullYear(), rpToday.getMonth() + 1, 0).getDate();
+  }
   const dailyAvg = daysInPeriod > 0 ? expSum / daysInPeriod : 0;
 
-  // Category breakdown
   const catBreakdown = {};
   RT.filter(t => t.type === 'expense').forEach(t => { catBreakdown[t.category] = (catBreakdown[t.category] || 0) + t.amount; });
   const sortedCats = Object.entries(catBreakdown).sort((a, b) => b[1] - a[1]);
   const totalExp = sortedCats.reduce((s, [, v]) => s + v, 0);
 
   const COLORS = ['var(--accent)', 'var(--teal)', '#5b8def', '#c8a015', '#9e62d8', 'var(--warn)', 'var(--income)', 'var(--text-3)'];
-
   const top7 = sortedCats.slice(0, 7);
   const otherVal = sortedCats.slice(7).reduce((s, [, v]) => s + v, 0);
   const pieData = otherVal > 0 ? [...top7, ['Other', otherVal]] : top7;
   let cum = 0;
   const segs = pieData.map(([cat, val], i) => {
-    const start = cum / totalExp * 360;
-    cum += val;
-    const end = cum / totalExp * 360;
-    return { cat, val, start, end, color: COLORS[i] || '#999' };
+    const start = cum / totalExp * 360; cum += val;
+    return { cat, val, start, end: cum / totalExp * 360, color: COLORS[i] || '#999' };
   });
 
-  // Top 5 individual expenses
   const top5Exp = [...RT.filter(t => t.type === 'expense')].sort((a, b) => b.amount - a.amount).slice(0, 5);
 
-  // Previous month comparison
-  const prevPrefix = new Date(rpToday.getFullYear(), rpToday.getMonth() - 1, 1).toISOString().slice(0, 7);
+  const prevM = new Date(rpToday.getFullYear(), rpToday.getMonth() - 1, 1);
+  const prevPrefix = _rMonthPfx(prevM);
   const prevMonthExp = allTxns.filter(t => t.date.startsWith(prevPrefix) && t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const momPct = prevMonthExp > 0 ? Math.round((expSum - prevMonthExp) / prevMonthExp * 100) : null;
 
-  const periodLabel = {
-    week: window.t('last_7_days'),
-    month: rpToday.toLocaleDateString(locale, { month: 'long', year: 'numeric' }),
-    year: String(rpToday.getFullYear()),
-  }[period];
+  const periodLabel = period === 'overall' ? window.t('all_time')
+    : period === 'custom' ? (customFrom && customTo ? `${customFrom} – ${customTo}` : window.t('custom'))
+    : period === 'week' ? window.t('last_7_days')
+    : period === 'year' ? String(rpToday.getFullYear())
+    : rpToday.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
 
-  // Pie arc helper
+  const trendTitle = trendPeriod === 'week' ? window.t('last_7_days')
+    : trendPeriod === 'year' ? '12-month trend'
+    : trendPeriod === 'custom' ? window.t('custom') + ' trend'
+    : window.t('mo6_trend');
+
+  const gradeArcLen = Math.max(savings, 0.03) * 2 * Math.PI * 68;
+
   const R = 62, INNER = 38;
   const arc = (start, end) => {
-    const a1 = (start - 90) * Math.PI / 180;
-    const a2 = (end - 90) * Math.PI / 180;
-    const x1 = Math.cos(a1) * R, y1 = Math.sin(a1) * R;
-    const x2 = Math.cos(a2) * R, y2 = Math.sin(a2) * R;
-    const x3 = Math.cos(a2) * INNER, y3 = Math.sin(a2) * INNER;
-    const x4 = Math.cos(a1) * INNER, y4 = Math.sin(a1) * INNER;
+    const a1 = (start - 90) * Math.PI / 180, a2 = (end - 90) * Math.PI / 180;
+    const x1 = Math.cos(a1)*R, y1 = Math.sin(a1)*R;
+    const x2 = Math.cos(a2)*R, y2 = Math.sin(a2)*R;
+    const x3 = Math.cos(a2)*INNER, y3 = Math.sin(a2)*INNER;
+    const x4 = Math.cos(a1)*INNER, y4 = Math.sin(a1)*INNER;
     const lg = (end - start) > 180 ? 1 : 0;
     return `M ${x1} ${y1} A ${R} ${R} 0 ${lg} 1 ${x2} ${y2} L ${x3} ${y3} A ${INNER} ${INNER} 0 ${lg} 0 ${x4} ${y4} Z`;
   };
 
-  const gradeArcLen = Math.max(savings, 0.03) * 2 * Math.PI * 68;
+  const PERIODS = [
+    { id: 'week', label: window.t('week') },
+    { id: 'month', label: window.t('month') },
+    { id: 'year', label: window.t('year') },
+    { id: 'overall', label: window.t('overall') },
+    { id: 'custom', label: window.t('custom') },
+  ];
+
+  const TREND_PERIODS = [
+    { id: 'week', label: window.t('week') },
+    { id: 'month', label: window.t('month') },
+    { id: 'year', label: window.t('year') },
+    { id: 'custom', label: window.t('custom') },
+  ];
+
+  const pillStyle = p => ({
+    padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
+    background: trendPeriod === p ? 'var(--accent)' : 'transparent',
+    color: trendPeriod === p ? '#fff' : 'var(--text-2)',
+    transition: 'background 120ms, color 120ms',
+  });
 
   return (
     <div className="page">
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: period === 'custom' ? 10 : 20 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.01em' }}>{window.t('financial_report')}</h2>
           <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{periodLabel}</div>
         </div>
         <div className="seg">
-          {[{ id: 'week', label: window.t('week') }, { id: 'month', label: window.t('month') }, { id: 'year', label: window.t('year') }].map(p => (
+          {PERIODS.map(p => (
             <button key={p.id} onClick={() => setPeriod(p.id)} className={period === p.id ? 'active' : ''}>{p.label}</button>
           ))}
         </div>
       </div>
+
+      {period === 'custom' && (
+        <div style={{ marginBottom: 20 }}>
+          <DateRangePicker from={customFrom} to={customTo} onFrom={setCustomFrom} onTo={setCustomTo} />
+        </div>
+      )}
 
       {loading && <div style={{ padding: 80, textAlign: 'center', color: 'var(--text-3)', fontSize: 14 }}>{window.t('loading')}</div>}
 
@@ -275,8 +404,6 @@ function PageReport({ userId, currency = 'USD' }) {
           {/* Grade card */}
           <div className="card" style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>{window.t('financial_grade')}</div>
-
-            {/* Donut ring — grade letter sits cleanly inside */}
             <div style={{ position: 'relative', width: 160, height: 160 }}>
               <svg width="160" height="160" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r="68" fill="none" style={{ stroke: 'var(--bg-warm)' }} strokeWidth="10" />
@@ -284,15 +411,13 @@ function PageReport({ userId, currency = 'USD' }) {
                   strokeDasharray={`${gradeArcLen} 9999`} strokeLinecap="round"
                   transform="rotate(-90 80 80)" />
               </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0 }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: 64, fontWeight: 800, lineHeight: 1, color: gradeColor }}>{grade}</span>
                 <span style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4, fontWeight: 600 }}>{gradeLabel}</span>
               </div>
             </div>
-
             <div className="mono" style={{ fontSize: 28, fontWeight: 700, marginTop: 14, color: gradeColor, letterSpacing: '-0.02em' }}>{savingsPct}%</div>
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('savings_rate')}</div>
-
             <div style={{ width: '100%', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-soft)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ textAlign: 'left' }}>
                 <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('income')}</div>
@@ -305,26 +430,41 @@ function PageReport({ userId, currency = 'USD' }) {
             </div>
           </div>
 
-          {/* 6-month trend */}
+          {/* Trend chart */}
           <div className="card">
-            <div className="card-head">
+            <div className="card-head" style={{ marginBottom: 6 }}>
               <div>
-                <div className="card-title">{window.t('mo6_trend')}</div>
+                <div className="card-title">{trendTitle}</div>
                 <div className="card-sub">{window.t('income_vs_exp')}</div>
               </div>
               <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-2)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 24, height: 3, borderRadius: 99, background: 'var(--income)', display: 'inline-block' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 18, height: 2, borderRadius: 99, background: 'var(--income)', display: 'inline-block' }} />
                   {window.t('income')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 24, height: 3, borderRadius: 99, background: 'var(--expense)', display: 'inline-block' }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 18, height: 2, borderRadius: 99, background: 'var(--expense)', display: 'inline-block' }} />
                   {window.t('expense')}
                 </span>
               </div>
             </div>
-            <div style={{ padding: '4px 0 0' }}>
-              <TrendChart series={SERIES} currency={currency} />
+
+            {/* Trend period selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', background: 'var(--bg-warm)', borderRadius: 8, padding: 2, gap: 2, border: '1px solid var(--border-soft)' }}>
+                {TREND_PERIODS.map(p => (
+                  <button key={p.id} onClick={() => setTrendPeriod(p.id)} style={pillStyle(p.id)}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              {trendPeriod === 'custom' && (
+                <DateRangePicker from={trendFrom} to={trendTo} onFrom={setTrendFrom} onTo={setTrendTo} />
+              )}
+            </div>
+
+            <div style={{ padding: '2px 0 0' }}>
+              <TrendChart series={SERIES} />
             </div>
           </div>
         </div>
@@ -332,7 +472,6 @@ function PageReport({ userId, currency = 'USD' }) {
         {/* ── Category breakdown + Top expenses ── */}
         <div className="rp-cat-top" style={{ display: 'grid', gridTemplateColumns: '1.15fr 1fr', gap: 16, marginBottom: 16 }}>
 
-          {/* Category donut */}
           <div className="card">
             <div className="card-head">
               <div className="card-title">{window.t('by_category')}</div>
@@ -344,9 +483,7 @@ function PageReport({ userId, currency = 'USD' }) {
               <div className="rp-cat-donut" style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 20, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
                   <svg width="160" height="160" viewBox="-80 -80 160 160">
-                    {segs.map((s, i) => (
-                      <path key={i} d={arc(s.start, s.end)} style={{ fill: s.color }} />
-                    ))}
+                    {segs.map((s, i) => <path key={i} d={arc(s.start, s.end)} style={{ fill: s.color }} />)}
                   </svg>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{window.t('spent')}</div>
@@ -372,7 +509,6 @@ function PageReport({ userId, currency = 'USD' }) {
             )}
           </div>
 
-          {/* Top 5 expenses */}
           <div className="card">
             <div className="card-head">
               <div className="card-title">Top Expenses</div>

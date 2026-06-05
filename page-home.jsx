@@ -2,7 +2,26 @@
 const { Icons: HI } = window;
 const { relDate: hrd, today: htoday } = window.OdemesData;
 
-const TODAY_KEY = htoday.toISOString().slice(0, 10);
+const _pad = n => String(n).padStart(2, '0');
+const _localStr = d => `${d.getFullYear()}-${_pad(d.getMonth() + 1)}-${_pad(d.getDate())}`;
+const TODAY_KEY = _localStr(htoday);
+
+function getPeriodStart(period) {
+  const now = new Date();
+  if (period === 'week') {
+    let prefs = {};
+    try { prefs = JSON.parse(localStorage.getItem('odemes-prefs') || '{}'); } catch (e) {}
+    const weekStartsSunday = (prefs.weekStart || 'sunday') === 'sunday';
+    const dow = now.getDay(); // 0=Sun, 1=Mon…
+    const offset = weekStartsSunday ? dow : (dow === 0 ? 6 : dow - 1);
+    const start = new Date(now);
+    start.setDate(now.getDate() - offset);
+    return _localStr(start);
+  }
+  if (period === 'year') return `${now.getFullYear()}-01-01`;
+  // default: month
+  return `${now.getFullYear()}-${_pad(now.getMonth() + 1)}-01`;
+}
 
 function deriveAll(type, txns) {
   const seen = new Set();
@@ -263,8 +282,8 @@ function HomeSplit({ shared }) {
     <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'minmax(360px, 1.05fr) minmax(320px, 1fr)' }}>
       <EntryFormSplit shared={shared} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-        <SummaryStrip stats={shared.stats} currency={shared.currency} />
-        <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} />
+        <SummaryStrip stats={shared.stats} currency={shared.currency} period={shared.period} />
+        <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} period={shared.period} setPeriod={shared.setPeriod} />
         <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
       </div>
     </div>
@@ -302,8 +321,8 @@ function HomeHero({ shared }) {
           </button>
         </div>
       </div>
-      <SummaryStrip stats={shared.stats} currency={shared.currency} />
-      <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} />
+      <SummaryStrip stats={shared.stats} currency={shared.currency} period={shared.period} />
+      <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} period={shared.period} setPeriod={shared.setPeriod} />
       <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
     </div>
   );
@@ -358,7 +377,7 @@ function HomeCalc({ shared }) {
   );
 }
 
-function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage }) {
+function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage, period = 'month', setPeriod }) {
   window.useLang();
   const { grade = '—', savingsRate = 0 } = stats;
   if (grade === '—') return null;
@@ -370,16 +389,32 @@ function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage })
   liveTxns.filter(t => t.type === 'expense').forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
   const topCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
   const totalExp = topCats.reduce((s, [, v]) => s + v, 0);
-  const monthInc = liveTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const maxBar = Math.max(monthInc, totalExp, 1);
+  const periodInc = liveTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const maxBar = Math.max(periodInc, totalExp, 1);
+
+  const periodTitle = window.t({ week: 'this_week', month: 'this_month', year: 'this_year' }[period] || 'this_month');
 
   return (
     <div className="card" style={{ padding: '18px 20px' }}>
       <div className="card-head" style={{ marginBottom: 16 }}>
-        <div className="card-title">This month</div>
-        <button className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 8px', color: 'var(--accent)' }} onClick={() => setPage?.('report')}>
-          Full report <HI.arrow_right size={12} />
-        </button>
+        <div className="card-title">{periodTitle}</div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-warm)', borderRadius: 8, padding: 2, gap: 2, border: '1px solid var(--border-soft)' }}>
+            {['week', 'month', 'year'].map(p => (
+              <button key={p} onClick={() => setPeriod?.(p)} style={{
+                padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
+                background: period === p ? 'var(--accent)' : 'transparent',
+                color: period === p ? '#fff' : 'var(--text-2)',
+                transition: 'background 120ms, color 120ms',
+              }}>
+                {window.t(p)}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 8px', color: 'var(--accent)' }} onClick={() => setPage?.('report')}>
+            <HI.arrow_right size={12} />
+          </button>
+        </div>
       </div>
 
       {/* Grade row */}
@@ -394,14 +429,14 @@ function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage })
       </div>
 
       {/* Income vs expenses bar */}
-      {(monthInc > 0 || totalExp > 0) && (
+      {(periodInc > 0 || totalExp > 0) && (
         <div style={{ marginBottom: 16 }}>
           <div style={{ height: 7, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden', display: 'flex', gap: 2 }}>
-            <div style={{ width: `${monthInc / maxBar * 100}%`, background: 'var(--income)', borderRadius: 99, minWidth: monthInc > 0 ? 4 : 0 }} />
+            <div style={{ width: `${periodInc / maxBar * 100}%`, background: 'var(--income)', borderRadius: 99, minWidth: periodInc > 0 ? 4 : 0 }} />
             <div style={{ width: `${totalExp / maxBar * 100}%`, background: 'var(--expense)', borderRadius: 99, minWidth: totalExp > 0 ? 4 : 0 }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--income)' }}>+{window.fmtCurrency(monthInc, currency, 0)}</span>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--income)' }}>+{window.fmtCurrency(periodInc, currency, 0)}</span>
             <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense)' }}>−{window.fmtCurrency(totalExp, currency, 0)}</span>
           </div>
         </div>
@@ -426,7 +461,7 @@ function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage })
   );
 }
 
-function SummaryStrip({ compact, stats = {}, currency = 'USD' }) {
+function SummaryStrip({ compact, stats = {}, currency = 'USD', period = 'month' }) {
   window.useLang();
   const { todayNet = 0, todayCount = 0, monthExp = 0, savingsRate = 0, grade = '—' } = stats;
   const base = compact ? 22 : 28;
@@ -453,7 +488,7 @@ function SummaryStrip({ compact, stats = {}, currency = 'USD' }) {
         <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{todayCount} {todayCount === 1 ? window.t('entry') : window.t('entries')}</div>
       </div>
       <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('this_month')}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t({ week: 'this_week', month: 'this_month', year: 'this_year' }[period] || 'this_month')}</div>
         <div className="mono" style={{ ...valueStyle, fontSize: autoSize(monthExpStr) }}>{monthExpStr}</div>
         <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{window.t('total_expenses')}</div>
       </div>
@@ -508,6 +543,7 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
   const [saving, setSaving] = React.useState(false);
   const [saved, setSaved] = React.useState(false);
   const [liveTxns, setLiveTxns] = React.useState([]);
+  const [period, setPeriod] = React.useState('month');
 
   // Treat `amount` as raw digit string (cents). "768889" → $7,688.89
   const amountDisplay = React.useMemo(() => {
@@ -527,18 +563,18 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
 
   React.useEffect(() => {
     if (!userId) return;
-    const monthStart = htoday.toISOString().slice(0, 7) + '-01';
+    const periodStart = getPeriodStart(period);
     window.SupabaseClient
       .from('transactions')
       .select('*')
       .eq('user_id', userId)
-      .gte('date', monthStart)
+      .gte('date', periodStart)
       .order('date', { ascending: false })
       .order('timestamp', { ascending: false })
       .then(({ data }) => {
         if (data) setLiveTxns(data.map(t => ({ ...t, amount: parseFloat(t.amount) })));
       });
-  }, [userId]);
+  }, [userId, period]);
 
   const allExpItems = React.useMemo(() => [...new Set([...recentExp, ...deriveAll('expense', liveTxns)])], [recentExp, liveTxns]);
   const allIncItems = React.useMemo(() => [...new Set([...recentInc, ...deriveAll('income', liveTxns)])], [recentInc, liveTxns]);
@@ -586,6 +622,7 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
     category, setCategory, note, setNote, date, setDate,
     saving, saved, handleSave,
     allExpItems, allIncItems, liveTxns, stats, setPage, currency,
+    period, setPeriod,
   };
 
   const locale = window._i18nLocale || 'en-US';

@@ -112,6 +112,32 @@ function TxModal({ tx, onClose, onSave, onDelete, allExpItems, allIncItems }) {
   );
 }
 
+const TxItem = React.memo(function TxItem({ t, onEdit, currency }) {
+  const isIncome = t.type === 'income';
+  return (
+    <div
+      className="txn-item"
+      onClick={() => onEdit(t)}
+      style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer' }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+    >
+      <div className="txn-icon" style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: isIncome ? 'var(--income-tint)' : 'var(--expense-tint)', color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
+        {isIncome ? <TxI.arrow_down size={14} /> : <TxI.arrow_up size={14} />}
+      </div>
+      <div>
+        <div className="txn-cat" style={{ fontSize: 14, fontWeight: 500 }}>{t.category}</div>
+        <div className="txn-note" style={{ fontSize: 12, color: 'var(--text-3)' }}>{t.note || '—'}</div>
+      </div>
+      <div className="txn-type" style={{ fontSize: 12, color: 'var(--text-3)', textTransform: 'capitalize' }}>{isIncome ? window.t('income') : window.t('expense')}</div>
+      <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 600, color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
+        {isIncome ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
+      </div>
+      <button className="icon-btn" onClick={e => { e.stopPropagation(); onEdit(t); }}><TxI.edit size={14} /></button>
+    </div>
+  );
+});
+
 function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
   window.useLang();
   const [period, setPeriod] = React.useState('month');
@@ -140,6 +166,7 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
   React.useEffect(() => { onCountChange && onCountChange(txns.length); }, [txns.length]);
 
   const handlePeriodChange = p => { setPeriod(p); setOffset(0); };
+  const handleOpenModal = React.useCallback(t => setModal(t), []);
 
   const range = getDateRange(period, offset, 'sunday');
   const label = getPeriodLabel(period, offset, 'sunday');
@@ -275,24 +302,7 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
                 </div>
               </div>
               {list.map(t => (
-                <div key={t.id} className="txn-item" onClick={() => setModal(t)}
-                  style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer' }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div className="txn-icon" style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: t.type === 'income' ? 'var(--income-tint)' : 'var(--expense-tint)', color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
-                    {t.type === 'income' ? <TxI.arrow_down size={14} /> : <TxI.arrow_up size={14} />}
-                  </div>
-                  <div>
-                    <div className="txn-cat" style={{ fontSize: 14, fontWeight: 500 }}>{t.category}</div>
-                    <div className="txn-note" style={{ fontSize: 12, color: 'var(--text-3)' }}>{t.note || '—'}</div>
-                  </div>
-                  <div className="txn-type" style={{ fontSize: 12, color: 'var(--text-3)', textTransform: 'capitalize' }}>{t.type === 'income' ? window.t('income') : window.t('expense')}</div>
-                  <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 600, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
-                    {t.type === 'income' ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
-                  </div>
-                  <button className="icon-btn" onClick={e => { e.stopPropagation(); setModal(t); }}><TxI.edit size={14} /></button>
-                </div>
+                <TxItem key={t.id} t={t} onEdit={handleOpenModal} currency={currency} />
               ))}
             </div>
           );

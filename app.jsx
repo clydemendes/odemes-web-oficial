@@ -1,5 +1,5 @@
 // Top-level app — routing, session, theme/accent
-const { Sidebar, AppStoreBanner, MobileTabBar, applyTheme, applyAccent, isIPhone } = window.AppShell;
+const { Sidebar, AppStoreBanner, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
 const { useTweaks } = window;
 
 // Format a number as currency. Uses Intl so symbol, grouping and decimals are locale-correct.
@@ -40,14 +40,33 @@ function App() {
   const [bannerDismissed, setBannerDismissed] = React.useState(() => {
     try { return localStorage.getItem('odemes_app_banner_dismissed') === '1'; } catch { return false; }
   });
+  const [pwaPrompt, setPwaPrompt] = React.useState(null);
+  const [pwaBannerDismissed, setPwaBannerDismissed] = React.useState(() => {
+    try { return localStorage.getItem('odemes_pwa_banner_dismissed') === '1'; } catch { return false; }
+  });
 
   const dismissAppBanner = () => {
     setBannerDismissed(true);
     try { localStorage.setItem('odemes_app_banner_dismissed', '1'); } catch {}
   };
+  const handlePwaInstall = async () => {
+    if (!pwaPrompt) return;
+    pwaPrompt.prompt();
+    const { outcome } = await pwaPrompt.userChoice;
+    setPwaPrompt(null);
+    if (outcome === 'accepted') {
+      setPwaBannerDismissed(true);
+      try { localStorage.setItem('odemes_pwa_banner_dismissed', '1'); } catch {}
+    }
+  };
+  const dismissPwaBanner = () => {
+    setPwaBannerDismissed(true);
+    try { localStorage.setItem('odemes_pwa_banner_dismissed', '1'); } catch {}
+  };
 
   React.useEffect(() => {
     if (isIPhone()) document.documentElement.classList.add('is-iphone');
+    if (isStandalone()) document.documentElement.classList.add('is-standalone');
     const mq = window.matchMedia('(max-width: 720px)');
     const syncMobile = () => document.documentElement.classList.toggle('is-mobile', mq.matches);
     syncMobile();
@@ -55,11 +74,30 @@ function App() {
     return () => mq.removeEventListener('change', syncMobile);
   }, []);
 
+  // beforeinstallprompt: fires on Android/Chrome when app is installable
   React.useEffect(() => {
-    const show = isIPhone() && !bannerDismissed;
+    if (isStandalone()) return;
+    const onPrompt = e => { e.preventDefault(); setPwaPrompt(e); };
+    const onInstalled = () => setPwaPrompt(null);
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const show = isIPhone() && !bannerDismissed && !isStandalone();
     document.documentElement.classList.toggle('has-app-banner', show);
     return () => document.documentElement.classList.remove('has-app-banner');
   }, [bannerDismissed]);
+
+  const showPwaBanner = !!pwaPrompt && !pwaBannerDismissed;
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('has-pwa-banner', showPwaBanner);
+    return () => document.documentElement.classList.remove('has-pwa-banner');
+  }, [showPwaBanner]);
 
   React.useEffect(() => { applyTheme(tweaks.theme); }, [tweaks.theme]);
   React.useEffect(() => { applyAccent(tweaks.accent); }, [tweaks.accent]);
@@ -155,6 +193,7 @@ function App() {
       <div className="stage">
         <div className="browser">
           {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
+          <PWAInstallBanner prompt={pwaBannerDismissed ? null : pwaPrompt} onInstall={handlePwaInstall} onDismiss={dismissPwaBanner} />
           <window.PageAuth />
         </div>
       </div>
@@ -172,6 +211,7 @@ function App() {
     <div className="stage">
       <div className="browser">
         {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
+        <PWAInstallBanner prompt={pwaBannerDismissed ? null : pwaPrompt} onInstall={handlePwaInstall} onDismiss={dismissPwaBanner} />
         <div className="app" data-collapsed={collapsed ? '1' : '0'}>
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} onToggleCollapse={() => setCollapsed(c => !c)} counts={{ transactions: txnCount, recurring: recurCount }} user={user} />
           <main className="app-main" style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>

@@ -129,9 +129,16 @@ function isIPhone() {
   return typeof navigator !== 'undefined' && /iPhone/.test(navigator.userAgent);
 }
 
+function isStandalone() {
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    navigator.standalone === true
+  );
+}
+
 function AppStoreBanner({ onDismiss }) {
   window.useLang?.();
-  if (!isIPhone()) return null;
+  if (!isIPhone() || isStandalone()) return null;
   return (
     <div className="app-store-banner" role="region" aria-label="Download Odemes app">
       <div className="app-store-banner-inner">
@@ -181,4 +188,23 @@ function MobileTabBar({ page, setPage, counts = {} }) {
   );
 }
 
-window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, applyTheme, applyAccent, isIPhone };
+function PWAInstallBanner({ prompt, onInstall, onDismiss }) {
+  if (!prompt) return null;
+  return (
+    <div className="pwa-install-banner" role="region" aria-label="Install Odemes">
+      <div className="app-store-banner-inner">
+        <img className="app-store-banner-icon" src="assets/apple-touch-icon.png" alt="" />
+        <div className="app-store-banner-text">
+          <strong>{window.t?.('pwa_install_title') || 'Install Odemes'}</strong>
+          <span>{window.t?.('pwa_install_sub') || 'Add to home screen for the best experience'}</span>
+        </div>
+        <button className="app-store-banner-btn" onClick={onInstall}>
+          {window.t?.('pwa_install_btn') || 'Install'}
+        </button>
+        <button type="button" className="app-store-banner-close" onClick={onDismiss} aria-label="Dismiss">×</button>
+      </div>
+    </div>
+  );
+}
+
+window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone };

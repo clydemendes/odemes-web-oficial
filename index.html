@@ -2,17 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover" />
 <title>Odemes — Personal Finance</title>
 <link rel="icon" href="favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
+
+<!-- PWA / installable web app -->
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="application-name" content="Odemes" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
+
+<!-- iOS standalone web app -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Odemes" />
+<meta name="format-detection" content="telephone=no" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
 <style>
   :root {
@@ -63,6 +76,10 @@
 
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; height: 100%; }
+  html {
+    -webkit-text-size-adjust: 100%;   /* don't let iOS resize text in landscape */
+    text-size-adjust: 100%;
+  }
   body {
     font-family: var(--font);
     font-weight: 600;
@@ -74,6 +91,16 @@
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: 'lnum' 1;
     overflow-x: hidden;
+    /* Native-app touch behaviour */
+    -webkit-tap-highlight-color: transparent;   /* no grey flash on tap */
+    overscroll-behavior-y: none;                /* kill pull-to-refresh / rubber-band */
+    touch-action: manipulation;                 /* remove 300ms double-tap zoom delay */
+  }
+  /* Buttons & nav shouldn't show the text-selection caret/flicker on tap. */
+  button, .side-item, .mobile-tab-bar-item, .seg button, .pill, .icon-btn, .btn {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
   a { color: inherit; text-decoration: none; }
   h1, h2, h3, .page-title { font-family: var(--font-display); letter-spacing: -0.01em; }
@@ -757,7 +784,8 @@
 
   /* Mobile-only UI — hidden on desktop */
   .mobile-tab-bar,
-  .app-store-banner { display: none; }
+  .app-store-banner,
+  .pwa-install-banner { display: none; }
 
   @media (max-width: 720px) {
     .app { grid-template-columns: 1fr !important; }
@@ -774,6 +802,9 @@
     html.has-app-banner .auth-stage {
       padding-top: calc(52px + env(safe-area-inset-top, 0px));
     }
+
+    /* iOS auto-zooms when a focused field is < 16px — force 16px to prevent it. */
+    .input, .auth-field input, input, select, textarea { font-size: 16px !important; }
 
     .page { padding: 10px 12px 14px; }
     .page-title { font-size: 18px !important; letter-spacing: -0.02em !important; }
@@ -960,6 +991,30 @@
     .mobile-tab-bar-item { min-height: 48px; padding: 5px 2px 4px; gap: 2px; }
     .mobile-tab-bar-item span { font-size: 9px; }
 
+    /* PWA install banner (Android / Chrome — beforeinstallprompt) */
+    .pwa-install-banner {
+      display: flex;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 80;
+      padding: calc(8px + env(safe-area-inset-top, 0px)) 10px 8px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-card);
+    }
+    html.has-pwa-banner .app-main,
+    html.has-pwa-banner .auth-stage {
+      padding-top: calc(52px + env(safe-area-inset-top, 0px));
+    }
+
+    /* Typography: clean, professional text on mobile */
+    .txn-cat, .txn-note {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar h1 { text-wrap: balance; overflow-wrap: break-word; }
+    .card-title { overflow-wrap: break-word; }
+    .btn { white-space: nowrap; }
+
     /* Fallback: compact rows without explicit classes */
     .page button[style*="100px auto"] {
       grid-template-columns: 28px 1fr auto !important;
@@ -1061,6 +1116,11 @@
     .auth-stage { min-height: 100vh; min-height: 100dvh; }
     .auth-main { padding: 20px 20px 28px; }
   }
+
+  /* Standalone PWA: content must clear the system status bar on all devices */
+  @media (display-mode: standalone) {
+    .browser { padding-top: env(safe-area-inset-top, 0px); }
+  }
 </style>
 </head>
 <body>
@@ -1081,6 +1141,26 @@
 <script type="text/babel" src="page-settings.jsx"></script>
 <script type="text/babel" src="page-auth.jsx"></script>
 <script type="text/babel" src="app.jsx"></script>
+
+<script>
+  // Register the service worker for offline app-shell caching (native-app feel).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        // When a new version is found, activate it immediately so updates don't lag.
+        reg.addEventListener('updatefound', function () {
+          var sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener('statechange', function () {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+              sw.postMessage('skipWaiting');
+            }
+          });
+        });
+      }).catch(function () { /* SW is a progressive enhancement; ignore failures */ });
+    });
+  }
+</script>
 
 </body>
 </html>

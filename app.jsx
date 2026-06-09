@@ -1,5 +1,5 @@
 // Top-level app — routing, session, theme/accent
-const { Sidebar, AppStoreBanner, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
+const { Sidebar, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
 const { useTweaks } = window;
 
 // Format a number as currency. Uses Intl so symbol, grouping and decimals are locale-correct.
@@ -37,18 +37,11 @@ function App() {
   const [collapsed, setCollapsed] = React.useState(false);
   const [txnCount, setTxnCount] = React.useState(0);
   const [recurCount, setRecurCount] = React.useState(0);
-  const [bannerDismissed, setBannerDismissed] = React.useState(() => {
-    try { return localStorage.getItem('odemes_app_banner_dismissed') === '1'; } catch { return false; }
-  });
   const [pwaPrompt, setPwaPrompt] = React.useState(null);
   const [pwaBannerDismissed, setPwaBannerDismissed] = React.useState(() => {
     try { return localStorage.getItem('odemes_pwa_banner_dismissed') === '1'; } catch { return false; }
   });
 
-  const dismissAppBanner = () => {
-    setBannerDismissed(true);
-    try { localStorage.setItem('odemes_app_banner_dismissed', '1'); } catch {}
-  };
   const handlePwaInstall = async () => {
     if (!pwaPrompt) return;
     pwaPrompt.prompt();
@@ -86,12 +79,6 @@ function App() {
       window.removeEventListener('appinstalled', onInstalled);
     };
   }, []);
-
-  React.useEffect(() => {
-    const show = isIPhone() && !bannerDismissed && !isStandalone();
-    document.documentElement.classList.toggle('has-app-banner', show);
-    return () => document.documentElement.classList.remove('has-app-banner');
-  }, [bannerDismissed]);
 
   const showPwaBanner = !!pwaPrompt && !pwaBannerDismissed;
   React.useEffect(() => {
@@ -192,7 +179,6 @@ function App() {
     return (
       <div className="stage">
         <div className="browser">
-          {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
           <PWAInstallBanner prompt={pwaBannerDismissed ? null : pwaPrompt} onInstall={handlePwaInstall} onDismiss={dismissPwaBanner} />
           <window.PageAuth />
         </div>
@@ -205,12 +191,11 @@ function App() {
   if (page === 'transactions') content = <window.PageTransactions onCountChange={setTxnCount} userId={user.id} currency={tweaks.currency} />;
   if (page === 'recurring')    content = <window.PageRecurring onCountChange={setRecurCount} userId={user.id} currency={tweaks.currency} />;
   if (page === 'report')       content = <window.PageReport userId={user.id} currency={tweaks.currency} />;
-  if (page === 'settings')     content = <window.PageSettings tweaks={tweaks} setTweak={setTweak} onSignOut={handleSignOut} userId={user.id} user={user} />;
+  if (page === 'settings')     content = <window.PageSettings tweaks={tweaks} setTweak={setTweak} onSignOut={handleSignOut} userId={user.id} user={user} pwaInstallable={!!pwaPrompt && !pwaBannerDismissed} onPwaInstall={handlePwaInstall} />;
 
   return (
     <div className="stage">
       <div className="browser">
-        {!bannerDismissed && <AppStoreBanner onDismiss={dismissAppBanner} />}
         <PWAInstallBanner prompt={pwaBannerDismissed ? null : pwaPrompt} onInstall={handlePwaInstall} onDismiss={dismissPwaBanner} />
         <div className="app" data-collapsed={collapsed ? '1' : '0'}>
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} onToggleCollapse={() => setCollapsed(c => !c)} counts={{ transactions: txnCount, recurring: recurCount }} user={user} />

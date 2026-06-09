@@ -52,7 +52,7 @@ function parseCSVRow(line) {
   return result;
 }
 
-function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
+function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallable, onPwaInstall }) {
   window.useLang();
   const [tab, setTab] = React.useState('account');
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -292,6 +292,28 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user }) {
                   >{window.t('monday')}</button>
                 </div>
               } />
+              {window.AppShell.isIPhone() && !window.AppShell.isStandalone() && (
+                <div style={{ padding: '20px 0 4px' }}>
+                  <a
+                    href="https://apps.apple.com/us/app/odemes/id6759557054"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <img src="assets/apple-touch-icon.png" style={{ width: 20, height: 20, borderRadius: 5 }} alt="" />
+                    {window.t?.('mobile_app_title') || 'Get the Odemes app'}
+                  </a>
+                </div>
+              )}
+              {pwaInstallable && (
+                <div style={{ padding: '20px 0 4px' }}>
+                  <button className="btn" onClick={onPwaInstall} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                    <img src="assets/icon-192.png" style={{ width: 20, height: 20, borderRadius: 5 }} alt="" />
+                    {window.t?.('pwa_install_title') || 'Install Odemes'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

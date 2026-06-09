@@ -279,7 +279,7 @@ function EntryFormSplit({ shared }) {
 
 function HomeSplit({ shared }) {
   return (
-    <div style={{ display: 'grid', gap: 20, gridTemplateColumns: 'minmax(360px, 1.05fr) minmax(320px, 1fr)' }}>
+    <div className="home-split-grid" style={{ display: 'grid', gap: 20, gridTemplateColumns: 'minmax(360px, 1.05fr) minmax(320px, 1fr)' }}>
       <EntryFormSplit shared={shared} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
         <SummaryStrip stats={shared.stats} currency={shared.currency} period={shared.period} />

@@ -897,7 +897,7 @@
     .recur-item .recur-meta { font-size: 11px !important; }
     .recur-item .recur-freq { display: none !important; }
     .recur-item .recur-due { justify-self: end; }
-    .recur-item .recur-amt { font-size: 13px !important; justify-self: end; }
+    .recur-item .recur-amt { font-size: 13px !important; justify-self: end; grid-column: 2 / -1; white-space: nowrap; }
     .recur-item .recur-actions {
       grid-column: 1 / -1;
       display: flex !important;
@@ -962,11 +962,15 @@
       margin: 6px auto 4px !important;
     }
     .grade-ring-wrap svg { width: 120px !important; height: 120px !important; }
+    /* home split layout — single column on mobile */
+    .home-split-grid { grid-template-columns: 1fr !important; }
+
     /* report page mobile */
     .rp-kpi-grid { grid-template-columns: 1fr 1fr !important; }
     .rp-grade-trend { grid-template-columns: 1fr !important; }
     .rp-cat-top { grid-template-columns: 1fr !important; }
-    .rp-cat-donut { grid-template-columns: 1fr !important; justify-items: center; }
+    .rp-cat-donut { grid-template-columns: 1fr !important; }
+    .rp-cat-donut > div:first-child { justify-self: center; }
     .rp-cat-donut svg { width: 130px !important; height: 130px !important; }
 
     .modal-card {

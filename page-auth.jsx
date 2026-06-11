@@ -167,7 +167,8 @@ function PageAuth() {
         <footer className="auth-foot">
           <div className="auth-foot-left"><window.Icons.lock size={12} /> {window.t('ssl_badge')}</div>
           <div className="auth-foot-right">
-            <a href="privacy.html">{window.t('privacy_terms')}</a>
+            <a href="privacy.html">{window.t('privacy_policy')}</a>
+            <a href="terms.html">{window.t('terms_of_service')}</a>
           </div>
         </footer>
       </section>

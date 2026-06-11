@@ -80,6 +80,12 @@ function Sidebar({ page, setPage, collapsed, onToggleCollapse, counts = {}, user
         </div>
       </button>
       </div>
+
+      <div className="side-legal">
+        <a href="privacy.html" target="_blank" rel="noopener noreferrer">{window.t?.('privacy_policy') || 'Privacy'}</a>
+        <span>·</span>
+        <a href="terms.html" target="_blank" rel="noopener noreferrer">{window.t?.('terms_of_service') || 'Terms'}</a>
+      </div>
     </aside>);
 
 }

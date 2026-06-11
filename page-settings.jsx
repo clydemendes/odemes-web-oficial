@@ -408,6 +408,19 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
         </div>
       </div>
 
+      {/* Legal footer */}
+      <div style={{ marginTop: 32, paddingTop: 20, borderTop: '1px solid var(--border-soft)', display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <a href="privacy.html" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'none' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+        >{window.t('privacy_policy')}</a>
+        <span style={{ fontSize: 12, color: 'var(--text-3)' }}>·</span>
+        <a href="terms.html" target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: 'var(--text-3)', textDecoration: 'none' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-2)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+        >{window.t('terms_of_service')}</a>
+      </div>
+
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (
         <div

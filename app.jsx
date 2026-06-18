@@ -1,5 +1,5 @@
 // Top-level app — routing, session, theme/accent
-const { Sidebar, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
+const { Sidebar, MobileTabBar, MobileHeader, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
 const { useTweaks } = window;
 
 // Format a number as currency. Uses Intl so symbol, grouping and decimals are locale-correct.
@@ -60,7 +60,7 @@ function App() {
   React.useEffect(() => {
     if (isIPhone()) document.documentElement.classList.add('is-iphone');
     if (isStandalone()) document.documentElement.classList.add('is-standalone');
-    const mq = window.matchMedia('(max-width: 720px)');
+    const mq = window.matchMedia('(max-width: 767px)');
     const syncMobile = () => document.documentElement.classList.toggle('is-mobile', mq.matches);
     syncMobile();
     mq.addEventListener('change', syncMobile);
@@ -200,10 +200,11 @@ function App() {
         <div className="app" data-collapsed={collapsed ? '1' : '0'}>
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} onToggleCollapse={() => setCollapsed(c => !c)} counts={{ transactions: txnCount, recurring: recurCount }} user={user} />
           <main className="app-main" style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <MobileHeader user={user} setPage={setPage} />
             <div style={{ flex: 1, minHeight: 0 }}>{content}</div>
           </main>
         </div>
-        <MobileTabBar page={page} setPage={setPage} counts={{ transactions: txnCount, recurring: recurCount }} />
+        <MobileTabBar page={page} setPage={setPage} counts={{ transactions: txnCount, recurring: recurCount }} onAddTransaction={() => {}} />
       </div>
     </div>
   );

@@ -162,35 +162,63 @@ function AppStoreBanner({ onDismiss }) {
   );
 }
 
-function MobileTabBar({ page, setPage, counts = {} }) {
+function MobileTabBar({ page, setPage, counts = {}, onAddTransaction }) {
   window.useLang?.();
-  const items = [
+  const leftItems = [
     { id: 'home', ico: 'home', label: window.t?.('nav_home') || 'Home' },
-    { id: 'transactions', ico: 'list', label: window.t?.('nav_transactions') || 'Transactions', pill: counts.transactions },
+    { id: 'transactions', ico: 'list', label: window.t?.('nav_transactions') || 'Activity', pill: counts.transactions },
+  ];
+  const rightItems = [
     { id: 'recurring', ico: 'repeat', label: window.t?.('nav_recurring') || 'Recurring', pill: counts.recurring },
     { id: 'report', ico: 'chart', label: window.t?.('nav_report') || 'Report' },
-    { id: 'settings', ico: 'settings', label: window.t?.('nav_settings') || 'Settings' },
   ];
+  const TabItem = ({ it }) => {
+    const Ico = Icons[it.ico];
+    const active = page === it.id;
+    return (
+      <button
+        key={it.id}
+        type="button"
+        className={`mobile-tab-bar-item ${active ? 'active' : ''}`}
+        onClick={() => setPage(it.id)}
+        aria-current={active ? 'page' : undefined}
+      >
+        <Ico className="ico" />
+        <span>{it.label}</span>
+        {it.pill > 0 && <span className="mobile-tab-bar-pill">{it.pill > 99 ? '99+' : it.pill}</span>}
+      </button>
+    );
+  };
   return (
     <nav className="mobile-tab-bar" aria-label="Main navigation">
-      {items.map((it) => {
-        const Ico = Icons[it.ico];
-        const active = page === it.id;
-        return (
-          <button
-            key={it.id}
-            type="button"
-            className={`mobile-tab-bar-item ${active ? 'active' : ''}`}
-            onClick={() => setPage(it.id)}
-            aria-current={active ? 'page' : undefined}
-          >
-            <Ico className="ico" />
-            <span>{it.label}</span>
-            {it.pill > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)' }}>{it.pill > 99 ? '99+' : it.pill}</span>}
-          </button>
-        );
-      })}
+      {leftItems.map((it) => <TabItem key={it.id} it={it} />)}
+      <button
+        type="button"
+        className="mobile-tab-bar-fab"
+        onClick={onAddTransaction}
+        aria-label="Add transaction"
+      >
+        <Icons.plus size={22} />
+      </button>
+      {rightItems.map((it) => <TabItem key={it.id} it={it} />)}
     </nav>
+  );
+}
+
+function MobileHeader({ user, setPage }) {
+  return (
+    <div className="mobile-header">
+      <img src="assets/logo-black.png" alt="Odemes" className="mobile-header-logo logo-light" />
+      <img src="assets/logo-white.png" alt="Odemes" className="mobile-header-logo logo-dark" />
+      <button
+        type="button"
+        className="mobile-header-avatar"
+        onClick={() => setPage('settings')}
+        aria-label="Settings"
+      >
+        {user ? getInitials(user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '') : '?'}
+      </button>
+    </div>
   );
 }
 
@@ -213,4 +241,4 @@ function PWAInstallBanner({ prompt, onInstall, onDismiss }) {
   );
 }
 
-window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone };
+window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, MobileHeader, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone };

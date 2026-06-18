@@ -1,5 +1,5 @@
 // Top-level app — routing, session, theme/accent
-const { Sidebar, MobileTabBar, MobileHeader, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
+const { Sidebar, MobileTabBar, MobileHeader, QuickAddSheet, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone } = window.AppShell;
 const { useTweaks } = window;
 
 // Format a number as currency. Uses Intl so symbol, grouping and decimals are locale-correct.
@@ -37,6 +37,7 @@ function App() {
   const [collapsed, setCollapsed] = React.useState(false);
   const [txnCount, setTxnCount] = React.useState(0);
   const [recurCount, setRecurCount] = React.useState(0);
+  const [quickAddOpen, setQuickAddOpen] = React.useState(false);
   const [pwaPrompt, setPwaPrompt] = React.useState(null);
   const [pwaBannerDismissed, setPwaBannerDismissed] = React.useState(() => {
     try { return localStorage.getItem('odemes_pwa_banner_dismissed') === '1'; } catch { return false; }
@@ -204,7 +205,8 @@ function App() {
             <div style={{ flex: 1, minHeight: 0 }}>{content}</div>
           </main>
         </div>
-        <MobileTabBar page={page} setPage={setPage} counts={{ transactions: txnCount, recurring: recurCount }} onAddTransaction={() => {}} />
+        <MobileTabBar page={page} setPage={setPage} counts={{ transactions: txnCount, recurring: recurCount }} onAddTransaction={() => setQuickAddOpen(true)} />
+        <QuickAddSheet open={quickAddOpen} onClose={() => setQuickAddOpen(false)} userId={user.id} currency={tweaks.currency} onSaved={() => loadCounts(user.id)} />
       </div>
     </div>
   );

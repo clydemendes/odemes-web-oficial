@@ -241,4 +241,131 @@ function PWAInstallBanner({ prompt, onInstall, onDismiss }) {
   );
 }
 
-window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, MobileHeader, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone };
+function QuickAddSheet({ open, onClose, userId, currency = 'USD', onSaved }) {
+  const _pad = n => String(n).padStart(2, '0');
+  const todayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${_pad(d.getMonth() + 1)}-${_pad(d.getDate())}`;
+  };
+
+  const [type, setType] = React.useState('expense');
+  const [amount, setAmount] = React.useState('');
+  const [category, setCategory] = React.useState('');
+  const [note, setNote] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [showMore, setShowMore] = React.useState(false);
+  const amountRef = React.useRef(null);
+
+  const amountDisplay = React.useMemo(() => {
+    if (!amount) return '';
+    const padded = amount.padStart(3, '0');
+    const whole = parseInt(padded.slice(0, -2), 10);
+    const dec = padded.slice(-2);
+    return whole.toLocaleString(window._i18nLocale || 'en-US') + '.' + dec;
+  }, [amount]);
+
+  React.useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => amountRef.current?.focus(), 80);
+    } else {
+      document.body.style.overflow = '';
+      setAmount('');
+      setCategory('');
+      setNote('');
+      setType('expense');
+      setShowMore(false);
+      setSaving(false);
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  const handleSave = async () => {
+    const amountVal = parseInt(amount || '0', 10) / 100;
+    if (!amount || amountVal <= 0 || !category || !userId || saving) return;
+    setSaving(true);
+    const { data } = await window.SupabaseClient
+      .from('transactions')
+      .insert({ user_id: userId, amount: amountVal, type, category, note: note || null, date: todayStr(), currency })
+      .select()
+      .single();
+    setSaving(false);
+    if (data) { onSaved?.(); onClose(); }
+  };
+
+  if (!open) return null;
+
+  return ReactDOM.createPortal(
+    <>
+      <div className="quick-add-scrim" onClick={onClose} aria-hidden="true" />
+      <div className="quick-add-sheet" role="dialog" aria-modal="true" aria-label={window.t?.('add_transaction') || 'Add transaction'}>
+        <div className="quick-add-handle-row">
+          <div className="quick-add-drag-handle" />
+          <button type="button" className="quick-add-close" onClick={onClose} aria-label="Close">
+            <Icons.x size={15} />
+          </button>
+        </div>
+
+        <div className="seg" style={{ width: '100%' }}>
+          <button type="button" onClick={() => setType('expense')} className={type === 'expense' ? 'active' : ''} style={{ flex: 1, color: type === 'expense' ? 'var(--expense)' : undefined }}>
+            {window.t?.('expense') || 'Expense'}
+          </button>
+          <button type="button" onClick={() => setType('income')} className={type === 'income' ? 'active' : ''} style={{ flex: 1, color: type === 'income' ? 'var(--income)' : undefined }}>
+            {window.t?.('income') || 'Income'}
+          </button>
+        </div>
+
+        <div className="quick-add-amount-row">
+          <span className="mono quick-add-symbol">{window.currencySymbol?.(currency) || '$'}</span>
+          <input
+            ref={amountRef}
+            type="text"
+            inputMode="decimal"
+            className="mono quick-add-amount-input"
+            value={amountDisplay}
+            onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+            placeholder="0.00"
+            aria-label={window.t?.('amount') || 'Amount'}
+          />
+        </div>
+
+        <input
+          className="input"
+          placeholder={type === 'expense'
+            ? ((window.t?.('what_for') || 'What for?') + ' e.g. Coffee, Rent…')
+            : ((window.t?.('what_from') || 'What from?') + ' e.g. Salary, Gift…')}
+          value={category}
+          onChange={e => setCategory(e.target.value)}
+          aria-label="Description"
+        />
+
+        <button type="button" className="quick-add-more-toggle" onClick={() => setShowMore(v => !v)}>
+          {showMore ? (window.t?.('less_details') || 'Less details') : (window.t?.('more_details') || 'More details')}
+          <Icons.arrow_down size={12} style={{ transform: showMore ? 'rotate(180deg)' : 'none', transition: 'transform 160ms ease' }} />
+        </button>
+
+        {showMore && (
+          <input
+            className="input"
+            placeholder={window.t?.('optional') || 'Note (optional)'}
+            value={note}
+            onChange={e => setNote(e.target.value)}
+          />
+        )}
+
+        <button
+          type="button"
+          className="btn btn-primary"
+          style={{ width: '100%', padding: '14px', fontSize: 16, marginTop: 4 }}
+          onClick={handleSave}
+          disabled={!amountDisplay || !category || saving}
+        >
+          {saving ? (window.t?.('saving') || 'Saving…') : (window.t?.('save_txn') || 'Save')}
+        </button>
+      </div>
+    </>,
+    document.body
+  );
+}
+
+window.AppShell = { BrowserChrome, Sidebar, TopBar, AppStoreBanner, MobileTabBar, MobileHeader, QuickAddSheet, PWAInstallBanner, applyTheme, applyAccent, isIPhone, isStandalone };

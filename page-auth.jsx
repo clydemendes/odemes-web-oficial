@@ -23,14 +23,9 @@ function LangSelect() {
   const lang = window.useLang();
   return (
     <select
+      className="auth-lang"
       value={lang}
       onChange={e => window.setLang(e.target.value)}
-      style={{
-        padding: '6px 10px', borderRadius: 8,
-        border: '1px solid var(--border)',
-        background: 'var(--bg)', color: 'var(--text)',
-        fontSize: 13, cursor: 'pointer',
-      }}
     >
       <option value="en">🇬🇧 EN</option>
       <option value="es">🇪🇸 ES</option>
@@ -87,91 +82,76 @@ function PageAuth() {
   return (
     <>
     <div className="auth-stage">
-      {/* Left — marketing panel */}
-      <aside className="auth-aside">
-        <div className="auth-aside-top">
-          <div className="auth-brand">
-            <img src="assets/logo-white.png" alt="Odemes" />
-          </div>
+      {/* Interactive dot grid — sits behind everything, non-interactive */}
+      <div className="auth-bg" aria-hidden="true">
+        <window.DotField
+          dotRadius={1.5}
+          dotSpacing={14}
+          bulgeStrength={67}
+          glowRadius={160}
+          sparkle={false}
+          waveAmplitude={0}
+          gradientFrom="#F97316"
+          gradientTo="rgba(244,98,42,0.42)"
+          glowColor="rgba(255,138,74,0.22)"
+        />
+      </div>
+      <div className="auth-veil" aria-hidden="true" />
+
+      <header className="auth-topnav">
+        <img src="assets/logo-white.png" alt="Odemes" className="auth-topnav-logo" />
+        <LangSelect />
+      </header>
+
+      <main className="auth-body">
+        {/* Left — the pitch */}
+        <section className="auth-copy">
           <div className="auth-eyebrow">{window.t('auth_eyebrow')}</div>
           <h1 className="auth-headline">
             {window.t('auth_headline_1')}<br/>
             {window.t('auth_headline_2')}
           </h1>
           <p className="auth-lede">{window.t('auth_lede')}</p>
-        </div>
 
-        <button className="auth-appstore-btn" onClick={() => setShowQR(true)}>
-          <AppleMark size={20} />
-          <div>
-            <div className="auth-appstore-btn-label">Download on the</div>
-            <div className="auth-appstore-btn-name">App Store</div>
-          </div>
-        </button>
-
-        <div className="auth-receipt" aria-hidden="true">
-          <div className="ar-row">
-            <span>{new Date().toLocaleDateString(window._i18nLocale || 'en-US', { month: 'long', year: 'numeric' })}</span>
-            <span className="mono">$2,800.00 net</span>
-          </div>
-          <div className="ar-bar"><div className="ar-bar-fill" style={{ width: '78%' }} /></div>
-          <div className="ar-grade">
-            <div className="ar-grade-letter">A</div>
-            <div className="ar-grade-meta">
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{window.t('on_track')}</div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>{window.t('saved_pct_target', { pct: 78, days: 4 })}</div>
+          <button className="auth-appstore-btn" onClick={() => setShowQR(true)}>
+            <AppleMark size={20} />
+            <div>
+              <div className="auth-appstore-btn-label">Download on the</div>
+              <div className="auth-appstore-btn-name">App Store</div>
             </div>
-          </div>
-          <div className="ar-line"><span>{window.t('income')}</span><span className="mono">+$5,420</span></div>
-          <div className="ar-line"><span>{window.t('expense')}</span><span className="mono">−$2,620</span></div>
-          <div className="ar-line ar-line-total"><span>{window.t('net')}</span><span className="mono">+$2,800</span></div>
-        </div>
+          </button>
+        </section>
 
-      </aside>
-
-      {/* Right — sign-in */}
-      <section className="auth-main">
-        <div className="auth-topnav">
-          <div className="auth-brand-mob">
-            <img src="assets/logo-black.png" alt="Odemes" className="logo-light" />
-            <img src="assets/logo-white.png" alt="Odemes" className="logo-dark" />
-          </div>
-          <div style={{ marginLeft: 'auto' }}>
-            <LangSelect />
-          </div>
-        </div>
-
-        <div className="auth-card">
+        {/* Right — sign-in */}
+        <section className="auth-card">
           <div className="auth-card-head">
             <h2>{window.t('auth_welcome')}</h2>
             <p>{window.t('auth_sub')}</p>
           </div>
 
-          <button className="auth-oauth" onClick={() => signIn('google')} disabled={loading !== null}>
+          <button className="auth-oauth auth-oauth-google" onClick={() => signIn('google')} disabled={loading !== null}>
             {loading === 'google' ? <span className="auth-spin" /> : <GoogleMark />}
             <span>{loading === 'google' ? window.t('connecting') : window.t('continue_google')}</span>
           </button>
 
           <button className="auth-oauth auth-oauth-apple" onClick={() => signIn('apple')} disabled={loading !== null}>
-            {loading === 'apple' ? <span className="auth-spin" /> : <AppleMark />}
+            {loading === 'apple' ? <span className="auth-spin auth-spin-light" /> : <AppleMark />}
             <span>{loading === 'apple' ? window.t('connecting') : window.t('continue_apple')}</span>
           </button>
 
-          {error && (
-            <div style={{ padding: '10px 14px', borderRadius: 8, background: 'var(--expense-tint)', color: 'var(--expense)', fontSize: 13, fontWeight: 500, marginTop: 8 }}>
-              {error}
-            </div>
-          )}
-        </div>
+          {error && <div className="auth-error">{error}</div>}
 
-        <footer className="auth-foot">
-          <div className="auth-foot-left"><window.Icons.lock size={12} /> {window.t('ssl_badge')}</div>
-          <div className="auth-foot-right">
-            <a href="privacy.html">{window.t('privacy_policy')}</a>
-            <a href="terms.html">{window.t('terms_of_service')}</a>
+          <div className="auth-card-foot">
+            <window.Icons.lock size={12} /> {window.t('ssl_badge')}
           </div>
-        </footer>
-      </section>
+        </section>
+      </main>
+
+      <footer className="auth-foot">
+        <a href="privacy.html">{window.t('privacy_policy')}</a>
+        <span className="auth-foot-dot">·</span>
+        <a href="terms.html">{window.t('terms_of_service')}</a>
+      </footer>
     </div>
     {showQR && <AppStoreQRModal onClose={() => setShowQR(false)} />}
     </>

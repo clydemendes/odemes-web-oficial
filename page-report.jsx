@@ -71,8 +71,8 @@ function TrendChart({ series, currency = 'USD' }) {
     const s = series[hovered];
     const x = px(hovered);
     const lines = [];
-    if (s.income > 0) lines.push({ label: 'Income', value: `+${window.fmtCurrency(s.income, currency, 0)}`, color: '#1aae39' });
-    if (s.expenses > 0) lines.push({ label: 'Expense', value: `−${window.fmtCurrency(s.expenses, currency, 0)}`, color: '#C62828' });
+    if (s.income > 0) lines.push({ label: window.t('income'), value: `+${window.fmtCurrency(s.income, currency, 0)}`, color: 'var(--income)' });
+    if (s.expenses > 0) lines.push({ label: window.t('expense'), value: `−${window.fmtCurrency(s.expenses, currency, 0)}`, color: 'var(--text)' });
     if (!lines.length) return null;
 
     const tp = 10, lh = 18, ttW = 148;
@@ -94,12 +94,12 @@ function TrendChart({ series, currency = 'USD' }) {
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
         <linearGradient id="rp-ig" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1aae39" stopOpacity="0.16" />
-          <stop offset="100%" stopColor="#1aae39" stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: 'var(--green)' }} stopOpacity="0.14" />
+          <stop offset="100%" style={{ stopColor: 'var(--green)' }} stopOpacity="0" />
         </linearGradient>
         <linearGradient id="rp-eg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#C62828" stopOpacity="0.11" />
-          <stop offset="100%" stopColor="#C62828" stopOpacity="0" />
+          <stop offset="0%" style={{ stopColor: 'var(--text)' }} stopOpacity="0.07" />
+          <stop offset="100%" style={{ stopColor: 'var(--text)' }} stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -122,14 +122,14 @@ function TrendChart({ series, currency = 'USD' }) {
       <path d={incArea} fill="url(#rp-ig)" />
       <path d={expArea} fill="url(#rp-eg)" />
 
-      <path d={incLine} fill="none" stroke="#1aae39" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d={expLine} fill="none" stroke="#C62828" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={incLine} fill="none" style={{ stroke: 'var(--green)' }} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={expLine} fill="none" style={{ stroke: 'var(--text)' }} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
 
       {/* Hover vertical line */}
       {hovered !== null && (
         <line x1={px(hovered)} y1={pad.t} x2={px(hovered)} y2={bottom}
-          stroke="var(--border)" strokeWidth="1" strokeDasharray="3 2"
-          style={{ pointerEvents: 'none' }} />
+          strokeWidth="1" strokeDasharray="3 2"
+          style={{ stroke: 'var(--border)', pointerEvents: 'none' }} />
       )}
 
       {/* Dots with hover areas */}
@@ -143,11 +143,11 @@ function TrendChart({ series, currency = 'USD' }) {
             <rect x={px(i) - 14} y={pad.t} width={28} height={cH} fill="transparent" />
             {s.income > 0 && (
               <circle cx={px(i)} cy={py(s.income)} r={isHov ? 4.5 : 3}
-                fill="#1aae39" style={{ stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
+                style={{ fill: 'var(--green)', stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
             )}
             {s.expenses > 0 && (
               <circle cx={px(i)} cy={py(s.expenses)} r={isHov ? 4.5 : 3}
-                fill="#C62828" style={{ stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
+                style={{ fill: 'var(--text)', stroke: 'var(--bg)', transition: 'r 80ms' }} strokeWidth="1.5" />
             )}
           </g>
         );
@@ -170,9 +170,8 @@ function TrendChart({ series, currency = 'USD' }) {
         const { tx, ty, ttW, ttH, tp, lh, s, lines } = tooltip;
         return (
           <g style={{ pointerEvents: 'none' }}>
-            <rect x={tx} y={ty} width={ttW} height={ttH} rx="7"
-              fill="var(--bg)" stroke="var(--border)" strokeWidth="1"
-              style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.14))' }} />
+            <rect x={tx} y={ty} width={ttW} height={ttH} rx="9"
+              style={{ fill: 'var(--bg)', stroke: 'var(--border)', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.14))' }} strokeWidth="1" />
             <text x={tx + tp} y={ty + tp + 10} textAnchor="start"
               style={{ fontSize: 10, fontWeight: 600, fill: 'var(--text-3)', fontFamily: 'var(--font)' }}>
               {s.month}
@@ -184,7 +183,7 @@ function TrendChart({ series, currency = 'USD' }) {
                   {line.label}
                 </text>
                 <text x={tx + ttW - tp} y={ty + tp + 14 + (i + 1) * lh} textAnchor="end"
-                  style={{ fontSize: 11, fontWeight: 700, fill: line.color, fontFamily: 'var(--mono)' }}>
+                  style={{ fontSize: 11, fontWeight: 600, fill: line.color, fontFamily: 'var(--mono)' }}>
                   {line.value}
                 </text>
               </g>
@@ -198,10 +197,10 @@ function TrendChart({ series, currency = 'USD' }) {
 
 function KpiCard({ label, value, sub, color }) {
   return (
-    <div className="card" style={{ padding: '18px 20px' }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>{label}</div>
-      <div className="mono" style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.025em', color: color || 'var(--text)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>{sub}</div>}
+    <div className="card" style={{ padding: '18px 20px', minWidth: 0 }}>
+      <div className="stat-label" style={{ marginBottom: 6 }}>{label}</div>
+      <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', color: color || 'var(--text)', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{value}</div>
+      {sub && <div className="stat-meta" style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{sub}</div>}
     </div>
   );
 }
@@ -350,8 +349,9 @@ function PageReport({ userId, currency = 'USD' }) {
   const savings   = incomeSum > 0 ? (incomeSum - expSum) / incomeSum : 0;
   const savingsPct = Math.round(savings * 100);
   const grade     = savings >= 0.5 ? 'A' : savings >= 0.35 ? 'B' : savings >= 0.2 ? 'C' : savings >= 0.05 ? 'D' : 'F';
-  const gradeColor = { A: 'var(--income)', B: 'var(--teal)', C: '#c8a015', D: 'var(--warn)', F: 'var(--expense)' }[grade];
-  const gradeLabel = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'At Risk', F: 'Critical' }[grade];
+  const gradeColor = window.gradeColor(grade);
+  const gradeFill = window.gradeFill(grade);
+  const gradeLabel = window.gradeLabel(grade);
 
   let daysInPeriod;
   if (period === 'week') daysInPeriod = 7;
@@ -376,7 +376,7 @@ function PageReport({ userId, currency = 'USD' }) {
   const sortedCats = Object.entries(catBreakdown).sort((a, b) => b[1] - a[1]);
   const totalExp = sortedCats.reduce((s, [, v]) => s + v, 0);
 
-  const COLORS = ['var(--accent)', 'var(--teal)', '#5b8def', '#c8a015', '#9e62d8', 'var(--warn)', 'var(--income)', 'var(--text-3)'];
+  const COLORS = [100, 74, 55, 41, 30, 21, 14, 9].map(p => p === 100 ? 'var(--text)' : `color-mix(in srgb, var(--text) ${p}%, var(--bg))`);
   const top7 = sortedCats.slice(0, 7);
   const otherVal = sortedCats.slice(7).reduce((s, [, v]) => s + v, 0);
   const pieData = otherVal > 0 ? [...top7, ['Other', otherVal]] : top7;
@@ -430,10 +430,10 @@ function PageReport({ userId, currency = 'USD' }) {
     <div className="page">
 
       {/* ── Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: period === 'custom' ? 10 : 20 }}>
+      <div className="report-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 14, marginBottom: period === 'custom' ? 14 : 28 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.01em' }}>{window.t('financial_report')}</h2>
-          <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{periodLabel}</div>
+          <h2 className="page-title">{window.t('financial_report')}</h2>
+          <div className="page-sub">{periodLabel}</div>
         </div>
         <div className="seg">
           {PERIODS.map(p => (
@@ -459,7 +459,7 @@ function PageReport({ userId, currency = 'USD' }) {
           <KpiCard label={window.t('expense')} value={`−${window.fmtCurrency(expSum, currency, 0)}`} color="var(--expense)"
             sub={`${RT.filter(t => t.type === 'expense').length} transactions`} />
           <KpiCard label={window.t('net')} value={(net >= 0 ? '+' : '−') + window.fmtCurrency(Math.abs(net), currency, 0)}
-            color={net >= 0 ? 'var(--income)' : 'var(--expense)'}
+            color={net >= 0 ? 'var(--income)' : 'var(--danger)'}
             sub={net >= 0 ? 'Positive balance' : 'Over budget'} />
           <KpiCard label="Daily avg spend" value={window.fmtCurrency(dailyAvg, currency, 0)}
             sub={`over ${daysInPeriod} days`} />
@@ -469,30 +469,30 @@ function PageReport({ userId, currency = 'USD' }) {
         <div className="rp-grade-trend" style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, marginBottom: 16 }}>
 
           {/* Grade card */}
-          <div className="card" style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>{window.t('financial_grade')}</div>
+          <div className="card" style={{ padding: '22px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+            <div className="card-title" style={{ alignSelf: 'flex-start', marginBottom: 18 }}>{window.t('financial_grade')}</div>
             <div style={{ position: 'relative', width: 160, height: 160 }}>
               <svg width="160" height="160" viewBox="0 0 160 160">
-                <circle cx="80" cy="80" r="68" fill="none" style={{ stroke: 'var(--bg-warm)' }} strokeWidth="10" />
-                <circle cx="80" cy="80" r="68" fill="none" style={{ stroke: gradeColor }} strokeWidth="10"
+                <circle cx="80" cy="80" r="68" fill="none" style={{ stroke: 'var(--bg-warm-2)' }} strokeWidth="7" />
+                <circle cx="80" cy="80" r="68" fill="none" style={{ stroke: gradeFill }} strokeWidth="7"
                   strokeDasharray={`${gradeArcLen} 9999`} strokeLinecap="round"
                   transform="rotate(-90 80 80)" />
               </svg>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 64, fontWeight: 800, lineHeight: 1, color: gradeColor }}>{grade}</span>
-                <span style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 4, fontWeight: 600 }}>{gradeLabel}</span>
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 68, lineHeight: 1, color: gradeColor }}>{grade}</span>
+                <span style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{gradeLabel}</span>
               </div>
             </div>
-            <div className="mono" style={{ fontSize: 28, fontWeight: 700, marginTop: 14, color: gradeColor, letterSpacing: '-0.02em' }}>{savingsPct}%</div>
+            <div className="mono" style={{ fontSize: 28, fontWeight: 500, marginTop: 16, letterSpacing: '-0.035em' }}>{savingsPct}%</div>
             <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('savings_rate')}</div>
             <div style={{ width: '100%', marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--border-soft)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('income')}</div>
-                <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--income)', marginTop: 2 }}>+{window.fmtCurrency(incomeSum, currency, 0)}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{window.t('income')}</div>
+                <div className="mono" style={{ fontSize: 14, fontWeight: 500, color: 'var(--income)', marginTop: 2 }}>+{window.fmtCurrency(incomeSum, currency, 0)}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{window.t('expense')}</div>
-                <div className="mono" style={{ fontSize: 14, fontWeight: 700, color: 'var(--expense)', marginTop: 2 }}>−{window.fmtCurrency(expSum, currency, 0)}</div>
+                <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{window.t('expense')}</div>
+                <div className="mono" style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>−{window.fmtCurrency(expSum, currency, 0)}</div>
               </div>
             </div>
           </div>
@@ -506,11 +506,11 @@ function PageReport({ userId, currency = 'USD' }) {
               </div>
               <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-2)' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 18, height: 2, borderRadius: 99, background: 'var(--income)', display: 'inline-block' }} />
+                  <span style={{ width: 16, height: 2, borderRadius: 99, background: 'var(--green)', display: 'inline-block' }} />
                   {window.t('income')}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 18, height: 2, borderRadius: 99, background: 'var(--expense)', display: 'inline-block' }} />
+                  <span style={{ width: 16, height: 2, borderRadius: 99, background: 'var(--text)', display: 'inline-block' }} />
                   {window.t('expense')}
                 </span>
               </div>
@@ -535,25 +535,23 @@ function PageReport({ userId, currency = 'USD' }) {
               <div className="rp-cat-donut" style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 20, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
                   <svg width="160" height="160" viewBox="-80 -80 160 160">
-                    {segs.map((s, i) => <path key={i} d={arc(s.start, s.end)} style={{ fill: s.color }} />)}
+                    {segs.map((s, i) => <path key={i} d={arc(s.start, s.end)} style={{ fill: s.color, stroke: 'var(--bg)', strokeWidth: 1.5 }} />)}
                   </svg>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{window.t('spent')}</div>
-                    <div className="mono" style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{window.fmtCurrency(totalExp, currency, 0)}</div>
+                    <div style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{window.t('spent')}</div>
+                    <div className="mono" style={{ fontSize: 16, fontWeight: 500, color: 'var(--text)', marginTop: 1 }}>{window.fmtCurrency(totalExp, currency, 0)}</div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                   {segs.map((s, i) => (
                     <div key={i}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                        <span style={{ width: 10, height: 10, borderRadius: 3, background: s.color, flexShrink: 0 }} />
-                        <span style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.cat}</span>
-                        <span className="mono" style={{ fontSize: 11, color: 'var(--text-2)', textAlign: 'right' }}>{window.fmtCurrency(s.val, currency, 0)}</span>
-                        <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)', minWidth: 32, textAlign: 'right' }}>{Math.round(s.val / totalExp * 100)}%</span>
+                      <div style={{ display: 'grid', gridTemplateColumns: '10px 1fr auto auto', alignItems: 'center', gap: 10 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 99, background: s.color, flexShrink: 0 }} />
+                        <span style={{ fontSize: 13.5, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.cat}</span>
+                        <span className="mono" style={{ fontSize: 13, color: 'var(--text-2)', textAlign: 'right' }}>{window.fmtCurrency(s.val, currency, 0)}</span>
+                        <span className="mono" style={{ fontSize: 13, color: 'var(--text-3)', minWidth: 36, textAlign: 'right' }}>{Math.round(s.val / totalExp * 100)}%</span>
                       </div>
-                      <div style={{ height: 3, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 99, background: s.color, width: `${Math.round(s.val / totalExp * 100)}%` }} />
-                      </div>
+
                     </div>
                   ))}
                 </div>
@@ -563,8 +561,8 @@ function PageReport({ userId, currency = 'USD' }) {
 
           <div className="card">
             <div className="card-head">
-              <div className="card-title">Top Expenses</div>
-              <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 600 }}>Biggest transactions</span>
+              <div className="card-title">Top expenses</div>
+              <span className="card-sub">Biggest transactions</span>
             </div>
             {top5Exp.length === 0 ? (
               <div style={{ padding: '32px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>{window.t('no_expenses')}</div>
@@ -576,18 +574,14 @@ function PageReport({ userId, currency = 'USD' }) {
                   const dateStr = d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
                   return (
                     <div key={t.id || i} style={{ padding: '10px 0', borderBottom: i < top5Exp.length - 1 ? '1px solid var(--border-soft)' : 'none' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
-                        <span style={{ width: 20, height: 20, borderRadius: 6, background: 'var(--expense-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--expense)', fontFamily: 'var(--mono)' }}>#{i + 1}</span>
-                        </span>
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.category}</span>
-                        <span className="mono" style={{ fontSize: 13, fontWeight: 700, color: 'var(--expense)', flexShrink: 0 }}>−{window.fmtCurrency(t.amount, currency, 0)}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 7 }}>
+                        <span className="rank">{i + 1}</span>
+                        <span style={{ flex: 1, fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.category}</span>
+                        <span className="mono" style={{ fontSize: 14, fontWeight: 500, flexShrink: 0 }}>−{window.fmtCurrency(t.amount, currency, 0)}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1, height: 3, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', borderRadius: 99, background: 'var(--expense)', width: `${barWidth}%`, opacity: 0.7 }} />
-                        </div>
-                        <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0, fontFamily: 'var(--mono)' }}>{dateStr}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 36 }}>
+                        <div className="meter" style={{ flex: 1 }}><i style={{ width: `${barWidth}%` }} /></div>
+                        <span className="mono" style={{ fontSize: 12.5, color: 'var(--text-3)', flexShrink: 0 }}>{dateStr}</span>
                       </div>
                     </div>
                   );
@@ -601,10 +595,7 @@ function PageReport({ userId, currency = 'USD' }) {
         <div className="card">
           <div className="card-head" style={{ marginBottom: 14 }}>
             <div className="card-title">{window.t('insights')}</div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)', fontWeight: 600 }}>
-              <span style={{ width: 6, height: 6, borderRadius: 99, background: 'var(--income)', display: 'inline-block' }} />
-              {window.t('auto_generated')}
-            </span>
+            <span className="card-sub">{window.t('auto_generated')}</span>
           </div>
           {incomeSum === 0 && expSum === 0 ? (
             <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>{window.t('add_for_insights')}</div>
@@ -612,44 +603,47 @@ function PageReport({ userId, currency = 'USD' }) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10 }}>
               {[
                 incomeSum > 0 && {
-                  ico: savings >= 0.5 ? '🏆' : savings >= 0.35 ? '✅' : savings >= 0.2 ? '📊' : '⚠️',
-                  title: 'Savings Rate',
-                  txt: <>Saving <b>{savingsPct}%</b> of income — grade <b style={{ color: gradeColor }}>{grade}</b> ({gradeLabel}).</>,
+                  ico: 'trending',
+                  title: window.t('savings_rate'),
+                  txt: <>Saving <b>{savingsPct}%</b> of income. That is grade <b style={{ color: gradeColor }}>{grade}</b>, {gradeLabel.toLowerCase()}.</>,
                 },
                 expSum > 0 && sortedCats[0] && {
-                  ico: '💸',
-                  title: 'Top Category',
+                  ico: 'tag',
+                  title: 'Top category',
                   txt: <><b>{sortedCats[0][0]}</b> is your biggest spend at <b>{window.fmtCurrency(sortedCats[0][1], currency, 0)}</b> ({Math.round(sortedCats[0][1] / totalExp * 100)}% of total).</>,
                 },
                 incomeSum > 0 && expSum > 0 && {
-                  ico: net >= 0 ? '💰' : '📉',
-                  title: 'Net Balance',
-                  txt: <>{net >= 0 ? 'You\'re ahead by ' : 'You\'re over by '}<b style={{ color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}>{window.fmtCurrency(Math.abs(net), currency, 0)}</b> this period.</>,
+                  ico: 'wallet',
+                  title: 'Net balance',
+                  txt: <>{net >= 0 ? 'You\'re ahead by ' : 'You\'re over by '}<b style={{ color: net >= 0 ? 'var(--income)' : 'var(--danger)' }}>{window.fmtCurrency(Math.abs(net), currency, 0)}</b> this period.</>,
                 },
                 expSum > 0 && {
-                  ico: '📅',
-                  title: 'Daily Average',
+                  ico: 'calendar',
+                  title: 'Daily average',
                   txt: <>Spending an average of <b>{window.fmtCurrency(dailyAvg, currency, 0)}</b> per day ({daysInPeriod}-day period).</>,
                 },
                 period === 'month' && momPct !== null && {
-                  ico: momPct <= 0 ? '📉' : '📈',
-                  title: 'vs Last Month',
-                  txt: <>Expenses are <b style={{ color: momPct <= 0 ? 'var(--income)' : 'var(--expense)' }}>{momPct <= 0 ? `${Math.abs(momPct)}% lower` : `${momPct}% higher`}</b> than last month.</>,
+                  ico: 'chart',
+                  title: 'Compared with last month',
+                  txt: <>Expenses are <b style={{ color: momPct <= 0 ? 'var(--income)' : 'var(--danger)' }}>{momPct <= 0 ? `${Math.abs(momPct)}% lower` : `${momPct}% higher`}</b> than last month.</>,
                 },
                 expSum > 0 && sortedCats.length > 1 && {
-                  ico: '🔍',
-                  title: 'Category Spread',
+                  ico: 'list',
+                  title: 'Category spread',
                   txt: <><b>{sortedCats.length}</b> spending categories. Top 3 account for <b>{Math.round(sortedCats.slice(0, 3).reduce((s, [, v]) => s + v, 0) / totalExp * 100)}%</b> of all spending.</>,
                 },
-              ].filter(Boolean).map((ins, i) => (
-                <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 10, background: 'var(--bg-warm)', border: '1px solid var(--border-soft)' }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--bg)', border: '1px solid var(--border-soft)', display: 'grid', placeItems: 'center', fontSize: 15, flexShrink: 0 }}>{ins.ico}</div>
-                  <div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>{ins.title}</div>
-                    <div style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--text-2)' }}>{ins.txt}</div>
+              ].filter(Boolean).map((ins, i) => {
+                const Ico = RpI[ins.ico];
+                return (
+                  <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', borderRadius: 12, background: 'var(--bg-warm)' }}>
+                    <Ico size={17} style={{ color: 'var(--text-3)', flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div style={{ fontSize: 13, color: 'var(--text-3)', marginBottom: 3 }}>{ins.title}</div>
+                      <div className="insight-txt" style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>{ins.txt}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

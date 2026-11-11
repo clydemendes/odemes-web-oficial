@@ -81,8 +81,8 @@ function DescriptionInput({ value, onChange, allItems, placeholder }) {
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
           background: 'var(--bg)', border: '1px solid var(--border)',
-          borderRadius: 10, zIndex: 100, overflow: 'hidden',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
+          borderRadius: 12, zIndex: 100, overflow: 'hidden',
+          boxShadow: 'var(--shadow-deep)',
         }}>
           {suggestions.slice(0, 6).map(s => (
             <button key={s} onMouseDown={e => { e.preventDefault(); pick(s); }}
@@ -90,7 +90,7 @@ function DescriptionInput({ value, onChange, allItems, placeholder }) {
               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <span style={{ fontWeight: 700 }}>{s.slice(0, trimmed.length)}</span>
+              <span style={{ fontWeight: 600 }}>{s.slice(0, trimmed.length)}</span>
               <span style={{ color: 'var(--text-2)' }}>{s.slice(trimmed.length)}</span>
             </button>
           ))}
@@ -100,7 +100,7 @@ function DescriptionInput({ value, onChange, allItems, placeholder }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
           {chips.map(s => (
             <button key={s} onMouseDown={e => { e.preventDefault(); pick(s); }}
-              style={{ padding: '4px 10px', borderRadius: 9999, fontSize: 12, fontWeight: 600, background: 'var(--bg-warm)', color: 'var(--text-2)', border: '1px solid var(--border-soft)' }}
+              style={{ padding: '5px 11px', borderRadius: 9999, fontSize: 13, fontWeight: 500, background: 'var(--bg-warm)', color: 'var(--text-2)' }}
             >{s}</button>
           ))}
         </div>
@@ -172,19 +172,19 @@ function DateButton({ value, onChange }) {
 
   // Render popup via portal so it escapes any overflow:hidden/auto ancestor
   const popup = open && ReactDOM.createPortal(
-    <div ref={popRef} style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.28)', padding: '18px', width: 276, userSelect: 'none' }}>
+    <div ref={popRef} style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: 'var(--shadow-deep)', padding: '18px', width: 276, userSelect: 'none' }}>
 
       {/* Month nav */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <button style={navBtn} onClick={prevM}><HI.arrow_left size={15} /></button>
-        <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em' }}>{monthTitle}</span>
+        <span style={{ fontSize: 14, fontWeight: 500, letterSpacing: '-0.01em' }}>{monthTitle}</span>
         <button style={navBtn} onClick={nextM}><HI.arrow_right size={15} /></button>
       </div>
 
       {/* DOW headers */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 8 }}>
         {DOW.map((d, i) => (
-          <div key={i} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: 'var(--text-3)', paddingBottom: 4 }}>{d}</div>
+          <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 500, color: 'var(--text-3)', paddingBottom: 4 }}>{d}</div>
         ))}
       </div>
 
@@ -197,10 +197,10 @@ function DateButton({ value, onChange }) {
           const isToday = iso === todayStr;
           return (
             <button key={i} onClick={() => pickDay(day)} style={{
-              width: '100%', aspectRatio: '1', borderRadius: 9, border: 'none', fontSize: 13,
-              fontWeight: isSel ? 700 : 400, cursor: 'pointer',
-              background: isSel ? 'var(--accent)' : 'transparent',
-              color: isSel ? '#fff' : isToday ? 'var(--accent)' : 'var(--text)',
+              width: '100%', aspectRatio: '1', borderRadius: 99, border: 'none', fontSize: 13,
+              fontWeight: isSel ? 600 : 400, cursor: 'pointer', fontVariantNumeric: 'tabular-nums',
+              background: isSel ? 'var(--ink)' : 'transparent',
+              color: isSel ? 'var(--ink-fg)' : 'var(--text)',
               boxShadow: isToday && !isSel ? 'inset 0 0 0 1.5px var(--accent)' : 'none',
               transition: 'background 80ms',
             }}
@@ -214,7 +214,7 @@ function DateButton({ value, onChange }) {
       {/* Today shortcut */}
       <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-soft)', textAlign: 'center' }}>
         <button onClick={() => { onChange(todayStr); setOpen(false); }}
-          style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-tint)', border: 'none', cursor: 'pointer', padding: '5px 16px', borderRadius: 8 }}>
+          style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', background: 'var(--bg-warm)', border: 'none', cursor: 'pointer', padding: '6px 16px', borderRadius: 99 }}>
           {window.t?.('today') || 'Today'}
         </button>
       </div>
@@ -225,8 +225,8 @@ function DateButton({ value, onChange }) {
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       <button ref={btnRef} type="button" onClick={openPicker}
-        style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '8px 12px', borderRadius: 8, border: `1px solid ${open ? 'var(--accent)' : 'var(--border)'}`, background: 'var(--bg-warm)', fontSize: 13, color: 'var(--text)', cursor: 'pointer', fontFamily: 'var(--mono)', fontWeight: 500, whiteSpace: 'nowrap', transition: 'border-color 120ms' }}>
-        <HI.calendar size={13} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 13px', borderRadius: 10, border: `1px solid ${open ? 'var(--text)' : 'var(--border)'}`, background: 'var(--bg)', fontSize: 14, lineHeight: '21px', color: 'var(--text)', cursor: 'pointer', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', transition: 'border-color 120ms' }}>
+        <HI.calendar size={14} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
         {label}
       </button>
       {popup}
@@ -240,7 +240,7 @@ function EntryFormSplit({ shared }) {
   const { type, setType, amountDisplay, handleAmountInput, category, setCategory, note, setNote, date, setDate, saving, saved, handleSave, allExpItems, allIncItems, currency = 'USD' } = shared;
   const allItems = type === 'expense' ? allExpItems : allIncItems;
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div className="card-head" style={{ marginBottom: 0 }}>
         <div className="card-title">{window.t('new_txn')}</div>
         <span className="card-sub mono">{hrd(TODAY_KEY)}</span>
@@ -249,11 +249,11 @@ function EntryFormSplit({ shared }) {
         <button onClick={() => setType('expense')} className={type === 'expense' ? 'active' : ''} style={{ flex: 1, color: type === 'expense' ? 'var(--expense)' : undefined }}>{window.t('expense')}</button>
         <button onClick={() => setType('income')} className={type === 'income' ? 'active' : ''} style={{ flex: 1, color: type === 'income' ? 'var(--income)' : undefined }}>{window.t('income')}</button>
       </div>
-      <div style={{ border: `1.5px solid ${type === 'income' ? 'var(--income)' : 'var(--expense)'}`, borderRadius: 12, padding: '20px 22px', display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--bg)' }}>
-        <span className="mono" style={{ fontSize: 22, color: 'var(--text-3)', fontWeight: 500 }}>{window.currencySymbol(currency)}</span>
-        <input value={amountDisplay} onChange={e => handleAmountInput(e.target.value)} placeholder="0.00" inputMode="numeric" className="mono"
-          style={{ flex: 1, border: 0, outline: 'none', background: 'transparent', fontSize: 36, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--text)', padding: 0 }} />
-        <span className="mono" style={{ fontSize: 12, color: 'var(--text-3)' }}>{currency}</span>
+      <div className="amount-field">
+        <span className="mono" style={{ fontSize: 22, color: 'var(--text-3)' }}>{window.currencySymbol(currency)}</span>
+        <input value={amountDisplay} onChange={e => handleAmountInput(e.target.value)} placeholder="0.00" inputMode="numeric" className="mono" aria-label={window.t('amount')}
+          style={{ flex: 1, minWidth: 0, width: '100%', border: 0, outline: 'none', background: 'transparent', fontSize: 40, fontWeight: 500, letterSpacing: '-0.035em', lineHeight: 1.1, color: type === 'income' ? 'var(--income)' : 'var(--text)', padding: 0 }} />
+        <span style={{ fontSize: 13, color: 'var(--text-3)' }}>{currency}</span>
       </div>
       <div>
         <label className="label">{type === 'income' ? window.t('what_from') : window.t('what_for')}</label>
@@ -270,8 +270,8 @@ function EntryFormSplit({ shared }) {
           <DateButton value={date} onChange={setDate} />
         </div>
       </div>
-      <button className="btn btn-primary" style={{ alignSelf: 'stretch' }} onClick={() => handleSave()} disabled={!amountDisplay || !category || saving || saved}>
-        <HI.check size={14} /> {saving ? window.t('saving') : saved ? window.t('saved') : window.t('save_txn')}
+      <button className="btn btn-primary btn-lg" style={{ alignSelf: 'stretch' }} onClick={() => handleSave()} disabled={!amountDisplay || !category || saving || saved}>
+        <HI.check size={15} /> {saving ? window.t('saving') : saved ? window.t('saved') : window.t('save_txn')}
       </button>
     </div>
   );
@@ -279,13 +279,15 @@ function EntryFormSplit({ shared }) {
 
 function HomeSplit({ shared }) {
   return (
-    <div className="home-split-grid" style={{ display: 'grid', gap: 20, gridTemplateColumns: 'minmax(360px, 1.05fr) minmax(320px, 1fr)' }}>
-      <EntryFormSplit shared={shared} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
-        <SummaryStrip stats={shared.stats} currency={shared.currency} period={shared.period} />
-        <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} period={shared.period} setPeriod={shared.setPeriod} />
-        <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="home-split-grid" style={{ display: 'grid', gap: 16, gridTemplateColumns: 'minmax(360px, 1.05fr) minmax(320px, 1fr)' }}>
+        <EntryFormSplit shared={shared} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <SummaryStrip stats={shared.stats} currency={shared.currency} period={shared.period} />
+          <MonthOverview stats={shared.stats} liveTxns={shared.liveTxns} currency={shared.currency} setPage={shared.setPage} period={shared.period} setPeriod={shared.setPeriod} />
+        </div>
       </div>
+      <RecentMini setPage={shared.setPage} txns={shared.liveTxns} currency={shared.currency} />
     </div>
   );
 }
@@ -382,8 +384,8 @@ function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage, p
   const { grade = '—', savingsRate = 0 } = stats;
   if (grade === '—') return null;
 
-  const gradeColor = { A: 'var(--income)', B: 'var(--teal)', C: '#c8a015', D: 'var(--warn)', F: 'var(--expense)' }[grade] || 'var(--text-3)';
-  const gradeLabel = { A: 'Excellent', B: 'Good', C: 'Fair', D: 'At Risk', F: 'Critical' }[grade];
+  const gradeColor = window.gradeColor(grade);
+  const gradeLabel = window.gradeLabel(grade);
 
   const catMap = {};
   liveTxns.filter(t => t.type === 'expense').forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + t.amount; });
@@ -395,66 +397,57 @@ function MonthOverview({ stats = {}, liveTxns = [], currency = 'USD', setPage, p
   const periodTitle = window.t({ week: 'this_week', month: 'this_month', year: 'this_year' }[period] || 'this_month');
 
   return (
-    <div className="card" style={{ padding: '18px 20px' }}>
-      <div className="card-head" style={{ marginBottom: 16 }}>
+    <div className="card">
+      <div className="card-head" style={{ marginBottom: 18 }}>
         <div className="card-title">{periodTitle}</div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <div style={{ display: 'flex', background: 'var(--bg-warm)', borderRadius: 8, padding: 2, gap: 2, border: '1px solid var(--border-soft)' }}>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <div className="seg seg-sm">
             {['week', 'month', 'year'].map(p => (
-              <button key={p} onClick={() => setPeriod?.(p)} style={{
-                padding: '3px 9px', borderRadius: 6, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
-                background: period === p ? 'var(--accent)' : 'transparent',
-                color: period === p ? '#fff' : 'var(--text-2)',
-                transition: 'background 120ms, color 120ms',
-              }}>
+              <button key={p} onClick={() => setPeriod?.(p)} className={period === p ? 'active' : ''}>
                 {window.t(p)}
               </button>
             ))}
           </div>
-          <button className="btn btn-ghost" style={{ fontSize: 12, padding: '4px 8px', color: 'var(--accent)' }} onClick={() => setPage?.('report')}>
-            <HI.arrow_right size={12} />
+          <button className="icon-btn" onClick={() => setPage?.('report')} aria-label={window.t('nav_report')} title={window.t('nav_report')}>
+            <HI.arrow_right size={14} />
           </button>
         </div>
       </div>
 
       {/* Grade row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-        <div style={{ width: 56, height: 56, borderRadius: 14, background: `color-mix(in srgb, ${gradeColor} 12%, transparent)`, border: `2px solid ${gradeColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 800, lineHeight: 1, color: gradeColor }}>{grade}</span>
+        <div style={{ width: 60, height: 60, borderRadius: 99, boxShadow: `inset 0 0 0 2px ${window.gradeFill(grade)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 34, lineHeight: 1, paddingBottom: 3, color: gradeColor }}>{grade}</span>
         </div>
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: gradeColor }}>{gradeLabel}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 2 }}>{savingsRate}% savings rate</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: gradeColor }}>{gradeLabel}</div>
+          <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('savings_rate')} {savingsRate}%</div>
         </div>
       </div>
 
       {/* Income vs expenses bar */}
       {(periodInc > 0 || totalExp > 0) && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{ height: 7, borderRadius: 99, background: 'var(--border-soft)', overflow: 'hidden', display: 'flex', gap: 2 }}>
-            <div style={{ width: `${periodInc / maxBar * 100}%`, background: 'var(--income)', borderRadius: 99, minWidth: periodInc > 0 ? 4 : 0 }} />
-            <div style={{ width: `${totalExp / maxBar * 100}%`, background: 'var(--expense)', borderRadius: 99, minWidth: totalExp > 0 ? 4 : 0 }} />
+          <div style={{ display: 'grid', gap: 5 }}>
+            <div className="meter" style={{ height: 5 }}><i style={{ width: `${periodInc / maxBar * 100}%`, background: 'var(--green)' }} /></div>
+            <div className="meter" style={{ height: 5 }}><i style={{ width: `${totalExp / maxBar * 100}%` }} /></div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--income)' }}>+{window.fmtCurrency(periodInc, currency, 0)}</span>
-            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense)' }}>−{window.fmtCurrency(totalExp, currency, 0)}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 500, color: 'var(--income)' }}>+{window.fmtCurrency(periodInc, currency, 0)}</span>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 500 }}>−{window.fmtCurrency(totalExp, currency, 0)}</span>
           </div>
         </div>
       )}
 
       {/* Top categories */}
       {topCats.slice(0, 3).map(([cat, val], i) => (
-        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: i === 0 ? '1px solid var(--border-soft)' : 'none' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--expense-tint)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--expense)' }}>#{i + 1}</span>
-          </div>
+        <div key={cat} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: '1px solid var(--border-soft)', paddingBottom: i === Math.min(topCats.length, 3) - 1 ? 0 : 10 }}>
+          <span className="rank">{i + 1}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</div>
-            <div style={{ height: 3, borderRadius: 99, background: 'var(--border-soft)', marginTop: 4, overflow: 'hidden' }}>
-              <div style={{ height: '100%', borderRadius: 99, background: 'var(--expense)', width: `${Math.round(val / totalExp * 100)}%`, opacity: 0.7 }} />
-            </div>
+            <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat}</div>
+            <div className="meter" style={{ marginTop: 6 }}><i style={{ width: `${Math.round(val / totalExp * 100)}%` }} /></div>
           </div>
-          <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--expense)', flexShrink: 0 }}>−{window.fmtCurrency(val, currency, 0)}</span>
+          <span className="mono" style={{ fontSize: 14, fontWeight: 500, flexShrink: 0 }}>−{window.fmtCurrency(val, currency, 0)}</span>
         </div>
       ))}
     </div>
@@ -477,25 +470,25 @@ function SummaryStrip({ compact, stats = {}, currency = 'USD', period = 'month' 
   const todayNetStr = (todayNet >= 0 ? '+' : '−') + window.fmtCurrency(todayNet, currency);
   const monthExpStr = window.fmtCurrency(monthExp, currency);
   const savingsStr = savingsRate + '%';
-  const valueStyle = { fontWeight: 700, letterSpacing: '-0.025em', marginTop: 4, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' };
+  const valueStyle = { fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' };
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
-      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('todays_net')}</div>
+      <div className="card" style={{ padding: compact ? 14 : '18px 20px', minWidth: 0 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('todays_net')}</div>
         <div className="mono" style={{ ...valueStyle, fontSize: autoSize(todayNetStr), color: todayNet >= 0 ? 'var(--income)' : 'var(--expense)' }}>
           {todayNetStr}
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{todayCount} {todayCount === 1 ? window.t('entry') : window.t('entries')}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{todayCount} {todayCount === 1 ? window.t('entry') : window.t('entries')}</div>
       </div>
-      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t({ week: 'this_week', month: 'this_month', year: 'this_year' }[period] || 'this_month')}</div>
+      <div className="card" style={{ padding: compact ? 14 : '18px 20px', minWidth: 0 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t({ week: 'this_week', month: 'this_month', year: 'this_year' }[period] || 'this_month')}</div>
         <div className="mono" style={{ ...valueStyle, fontSize: autoSize(monthExpStr) }}>{monthExpStr}</div>
-        <div style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{window.t('total_expenses')}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('total_expenses')}</div>
       </div>
-      <div className="card" style={{ padding: compact ? 14 : 18, minWidth: 0 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('savings_rate')}</div>
+      <div className="card" style={{ padding: compact ? 14 : '18px 20px', minWidth: 0 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('savings_rate')}</div>
         <div className="mono" style={{ ...valueStyle, fontSize: autoSize(savingsStr) }}>{savingsStr}</div>
-        <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 2 }}>{window.t('grade')} {grade}</div>
+        <div style={{ fontSize: 13, color: window.gradeColor(grade), marginTop: 2 }}>{window.t('grade')} {grade}</div>
       </div>
     </div>
   );
@@ -508,23 +501,23 @@ function RecentMini({ setPage, txns = [], currency = 'USD' }) {
     <div className="card">
       <div className="card-head">
         <div className="card-title">{window.t('recent_activity')}</div>
-        <button className="btn btn-ghost" style={{ fontSize: 13 }} onClick={() => setPage && setPage('transactions')}>
-          {window.t('view_all')} <HI.arrow_right size={13} />
+        <button className="btn btn-ghost" style={{ fontSize: 13, color: 'var(--text-2)', margin: '-6px -8px -6px 0' }} onClick={() => setPage && setPage('transactions')}>
+          {window.t('view_all')}
         </button>
       </div>
       {list.length === 0 && (
         <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text-3)', fontSize: 13 }}>{window.t('no_txns_yet')}</div>
       )}
       {list.map(t => (
-        <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '32px 1fr auto', gap: 12, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border-soft)' }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: t.type === 'income' ? 'var(--income-tint)' : 'var(--expense-tint)', color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+        <div key={t.id} style={{ display: 'grid', gridTemplateColumns: '32px 1fr auto', gap: 12, alignItems: 'center', padding: '10px 0', borderTop: '1px solid var(--border-soft)' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 99, display: 'grid', placeItems: 'center', background: t.type === 'income' ? 'var(--income-tint)' : 'var(--bg-warm)', color: t.type === 'income' ? 'var(--income)' : 'var(--text-2)' }}>
             {t.type === 'income' ? <HI.arrow_down size={14} /> : <HI.arrow_up size={14} />}
           </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500 }}>{t.category}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{t.note || '—'} · {hrd(t.date)}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.category}</div>
+            <div style={{ fontSize: 12.5, color: 'var(--text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.note ? `${t.note}, ${hrd(t.date)}` : hrd(t.date)}</div>
           </div>
-          <div className="mono" style={{ fontSize: 13, fontWeight: 600, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+          <div className="mono" style={{ fontSize: 14, fontWeight: 500, color: t.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
             {t.type === 'income' ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
           </div>
         </div>
@@ -629,11 +622,11 @@ function PageHome({ variation, setPage, userId, currency = 'USD' }) {
 
   return (
     <div className="page">
-      <div className="page-intro" style={{ marginBottom: 18 }}>
-        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('welcome_back')}</h2>
-        <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>
+      <div className="page-intro" style={{ marginBottom: 28 }}>
+        <h2 className="page-title">{window.t('welcome_back')}</h2>
+        <div className="page-sub">
           {htoday.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric' })}
-          {stats.grade !== '—' && window.t('grade_this_month', { grade: stats.grade })}
+          {stats.grade !== '—' && ' ' + window.t('grade_this_month', { grade: stats.grade })}
         </div>
       </div>
 

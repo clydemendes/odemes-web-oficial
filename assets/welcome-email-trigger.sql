@@ -26,7 +26,7 @@ begin
     url     := 'https://www.odemes.com/api/welcome-email',
     headers := jsonb_build_object(
       'Content-Type',     'application/json',
-      'x-welcome-secret', 'REPLACE_WITH_WELCOME_EMAIL_SECRET'
+      'x-welcome-secret', 'Q_uUEauu2zaR2O_ypamxJdGTZ167B2NjxjeCMqx7hvI'
     ),
     body    := jsonb_build_object(
       'email',  new.email,

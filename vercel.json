@@ -1,0 +1,5 @@
+{
+  "crons": [
+    { "path": "/api/plaid", "schedule": "0 7 * * *" }
+  ]
+}

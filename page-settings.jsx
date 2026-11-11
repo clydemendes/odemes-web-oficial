@@ -8,8 +8,8 @@ function Row({ title, sub, control }) {
       padding: '16px 0', borderBottom: '1px solid var(--border-soft)',
     }}>
       <div>
-        <div style={{ fontSize: 14, fontWeight: 500 }}>{title}</div>
-        {sub && <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 3, maxWidth: 420 }}>{sub}</div>}
+        <div style={{ fontSize: 14.5, fontWeight: 500 }}>{title}</div>
+        {sub && <div style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 3, maxWidth: 420 }}>{sub}</div>}
       </div>
       <div>{control}</div>
     </div>
@@ -19,8 +19,8 @@ function Row({ title, sub, control }) {
 function SectionHead({ title, desc }) {
   return (
     <div className="section-head" style={{ paddingBottom: 14, marginBottom: 4, borderBottom: '1px solid var(--border-soft)' }}>
-      <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.011em' }}>{title}</div>
-      {desc && <div style={{ fontSize: 13, color: 'var(--text-2)', marginTop: 4 }}>{desc}</div>}
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, lineHeight: 1.15, letterSpacing: '-0.02em' }}>{title}</div>
+      {desc && <div style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 5 }}>{desc}</div>}
     </div>
   );
 }
@@ -50,6 +50,185 @@ function parseCSVRow(line) {
   }
   result.push(current);
   return result;
+}
+
+// ── Bank sync (Plaid, invite only) ──────────────────────────────────────────
+// The server decides who's invited; non-invited users get { invited: false } and
+// the section renders nothing, so the feature is invisible to them.
+
+async function bankApi(action, extra) {
+  const { data: { session } } = await window.SupabaseClient.auth.getSession();
+  if (!session) throw new Error('signed_out');
+  const res = await fetch('/api/plaid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ action, ...extra }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'request_failed');
+  return data;
+}
+
+let plaidScript = null;
+function loadPlaidLink() {
+  if (window.Plaid) return Promise.resolve(window.Plaid);
+  if (!plaidScript) {
+    plaidScript = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js';
+      s.onload = () => resolve(window.Plaid);
+      s.onerror = () => { plaidScript = null; reject(new Error('plaid_script')); };
+      document.head.appendChild(s);
+    });
+  }
+  return plaidScript;
+}
+
+// Background sync on app open, at most every 6 hours per browser. Used by app.jsx.
+window.bankSyncInBackground = async function(userId) {
+  const key = 'odemes-bank-sync-' + userId;
+  try {
+    const last = Number(localStorage.getItem(key) || 0);
+    if (Date.now() - last < 6 * 3600 * 1000) return null;
+    localStorage.setItem(key, String(Date.now()));
+  } catch (e) {}
+  try {
+    const status = await bankApi('status');
+    if (!status.invited || !status.items?.length) return null;
+    return await bankApi('sync');
+  } catch (e) { return null; }
+};
+
+function BankSyncSection({ language }) {
+  const [state, setState] = React.useState({ loading: true, invited: false, items: [] });
+  const [busy, setBusy] = React.useState(null); // 'connect' | 'sync' | item_id
+  const [message, setMessage] = React.useState(null); // { ok, text }
+
+  React.useEffect(() => {
+    let alive = true;
+    bankApi('status')
+      .then(d => alive && setState({ loading: false, invited: !!d.invited, items: d.items || [], env: d.env }))
+      .catch(() => alive && setState({ loading: false, invited: false, items: [] }));
+    return () => { alive = false; };
+  }, []);
+
+  if (state.loading || !state.invited) return null;
+
+  const setItems = items => setState(s => ({ ...s, items }));
+  const fail = () => setMessage({ ok: false, text: window.t('bank_error') });
+
+  const openLink = async (itemId) => {
+    setMessage(null);
+    setBusy(itemId || 'connect');
+    try {
+      const [{ link_token }, Plaid] = await Promise.all([
+        bankApi('link_token', { item_id: itemId, language }),
+        loadPlaidLink(),
+      ]);
+      const handler = Plaid.create({
+        token: link_token,
+        onSuccess: async (public_token, metadata) => {
+          try {
+            const d = itemId
+              ? await bankApi('reconnected', { item_id: itemId })
+              : await bankApi('exchange', { public_token, institution: metadata.institution });
+            setItems(d.items);
+            if (!itemId) setMessage({ ok: true, text: window.t('bank_connected', { n: d.added || 0 }) });
+          } catch (e) { fail(); }
+          setBusy(null);
+          handler.destroy();
+        },
+        onExit: (err) => {
+          if (err) fail();
+          setBusy(null);
+          handler.destroy();
+        },
+      });
+      handler.open();
+    } catch (e) { fail(); setBusy(null); }
+  };
+
+  const syncNow = async () => {
+    setMessage(null);
+    setBusy('sync');
+    try {
+      const d = await bankApi('sync');
+      setItems(d.items);
+      setMessage({ ok: true, text: window.t('bank_sync_result', { n: d.added }) });
+    } catch (e) { fail(); }
+    setBusy(null);
+  };
+
+  const disconnect = async (item) => {
+    if (!confirm(window.t('bank_disconnect_confirm', { bank: item.institution_name }))) return;
+    setBusy(item.item_id);
+    try { setItems((await bankApi('disconnect', { item_id: item.item_id })).items); } catch (e) { fail(); }
+    setBusy(null);
+  };
+
+  const lastSynced = (iso) => iso
+    ? window.t('bank_last_sync', { when: new Date(iso).toLocaleString(window._i18nLocale || 'en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) })
+    : window.t('bank_never');
+
+  return (
+    <>
+      <Row
+        title={
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            {window.t('bank_sync')}
+            <span className="pill neutral" style={{ fontSize: 11 }}>{window.t('bank_beta')}{state.env === 'sandbox' ? ' · sandbox' : ''}</span>
+          </span>
+        }
+        sub={
+          message
+            ? <span style={{ color: message.ok ? 'var(--income)' : 'var(--danger)' }}>{message.text}</span>
+            : window.t('bank_sync_sub')
+        }
+        control={
+          <div style={{ display: 'flex', gap: 8 }}>
+            {state.items.length > 0 && (
+              <button className="btn btn-secondary" onClick={syncNow} disabled={!!busy}>
+                <SI.repeat size={14} /> {busy === 'sync' ? window.t('bank_syncing') : window.t('bank_sync_now')}
+              </button>
+            )}
+            <button className="btn btn-secondary" onClick={() => openLink()} disabled={!!busy}>
+              <SI.plus size={14} /> {busy === 'connect' ? '…' : window.t('bank_connect')}
+            </button>
+          </div>
+        }
+      />
+      {state.items.map(item => (
+        <Row
+          key={item.item_id}
+          title={
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <SI.wallet size={15} style={{ color: 'var(--text-3)' }} />
+              {item.institution_name}
+            </span>
+          }
+          sub={
+            item.status === 'login_required'
+              ? <span style={{ color: 'var(--danger)' }}>{window.t('bank_needs_login')}</span>
+              : item.status === 'error'
+                ? <span style={{ color: 'var(--danger)' }}>{window.t('bank_error')}</span>
+                : lastSynced(item.last_synced_at)
+          }
+          control={
+            <div style={{ display: 'flex', gap: 8 }}>
+              {item.status !== 'ok' && (
+                <button className="btn btn-secondary" onClick={() => openLink(item.item_id)} disabled={!!busy}>
+                  {window.t('bank_reconnect')}
+                </button>
+              )}
+              <button className="btn btn-ghost" onClick={() => disconnect(item)} disabled={!!busy}>
+                {busy === item.item_id ? '…' : window.t('bank_disconnect')}
+              </button>
+            </div>
+          }
+        />
+      ))}
+    </>
+  );
 }
 
 function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallable, onPwaInstall }) {
@@ -173,12 +352,12 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
 
   return (
     <div className="page">
-      <div className="page-intro" style={{ marginBottom: 24 }}>
-        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('settings_title')}</h2>
-        <div className="page-sub" style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{window.t('settings_sub')}</div>
+      <div className="page-intro" style={{ marginBottom: 32 }}>
+        <h2 className="page-title">{window.t('settings_title')}</h2>
+        <div className="page-sub">{window.t('settings_sub')}</div>
       </div>
 
-      <div className="settings-layout" style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 32, alignItems: 'start' }}>
+      <div className="settings-layout" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 48, alignItems: 'start' }}>
         {/* Tab nav */}
         <nav className="settings-nav" style={{ display: 'flex', flexDirection: 'column', gap: 2, position: 'sticky', top: 24 }}>
           {tabs.map(t => {
@@ -189,8 +368,8 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
                 onClick={() => setTab(t.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '9px 12px', borderRadius: 8,
-                  fontSize: 14, fontWeight: 500,
+                  padding: '9px 12px', borderRadius: 9,
+                  fontSize: 14.5, fontWeight: tab === t.id ? 500 : 450,
                   textAlign: 'left', width: '100%',
                   background: tab === t.id ? 'var(--bg-warm)' : 'transparent',
                   color: tab === t.id ? 'var(--text)' : 'var(--text-2)',
@@ -215,7 +394,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
             <div>
               <SectionHead title={window.t('s_account')} desc={window.t('s_account_desc')} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: '1px solid var(--border-soft)' }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, background: 'linear-gradient(135deg, var(--accent), var(--accent-deep))', color: '#fff', fontWeight: 700, fontSize: 18, display: 'grid', placeItems: 'center' }}>{initials}</div>
+                <div className="avatar-lg">{initials}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {editingName ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -236,11 +415,11 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
                           {window.t('cancel')}
                         </button>
                       </div>
-                      {nameError && <div style={{ fontSize: 12, color: 'var(--expense)' }}>{nameError}</div>}
+                      {nameError && <div style={{ fontSize: 13, color: 'var(--danger)' }}>{nameError}</div>}
                     </div>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <div style={{ fontWeight: 600, fontSize: 15 }}>{displayName}</div>
+                      <div style={{ fontWeight: 500, fontSize: 16 }}>{displayName}</div>
                       <button className="icon-btn" title="Edit name" onClick={() => { setNameInput(displayName); setEditingName(true); }}>
                         <SI.edit size={13} />
                       </button>
@@ -298,7 +477,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
                     href="https://apps.apple.com/us/app/odemes/id6759557054"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn"
+                    className="btn btn-secondary"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}
                   >
                     <img src="assets/apple-touch-icon.png" style={{ width: 20, height: 20, borderRadius: 5 }} alt="" />
@@ -308,7 +487,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
               )}
               {pwaInstallable && (
                 <div style={{ padding: '20px 0 4px' }}>
-                  <button className="btn" onClick={onPwaInstall} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <button className="btn btn-secondary" onClick={onPwaInstall} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     <img src="assets/icon-192.png" style={{ width: 20, height: 20, borderRadius: 5 }} alt="" />
                     {window.t?.('pwa_install_title') || 'Install Odemes'}
                   </button>
@@ -328,12 +507,12 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
               } />
               <Row title={window.t('accent')} sub={window.t('accent_sub')} control={
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {['#F4622A', '#0075de', '#00ACC1', '#7c3aed', '#16a34a', '#111111'].map(c => (
+                  {['#1aae39', '#0075de', '#00ACC1', '#7c3aed', '#F4622A'].map(c => (
                     <button key={c} onClick={() => setTweak('accent', c)} aria-label={c}
                       style={{
-                        width: 22, height: 22, borderRadius: 99, background: c,
-                        border: tweaks.accent.toLowerCase() === c.toLowerCase() ? '2px solid var(--text)' : '2px solid transparent',
-                        boxShadow: '0 0 0 1px var(--border)', cursor: 'pointer',
+                        width: 24, height: 24, borderRadius: 99, background: c, cursor: 'pointer',
+                        border: '3px solid var(--bg)',
+                        boxShadow: (tweaks.accent || '').toLowerCase() === c.toLowerCase() ? '0 0 0 1.5px var(--text)' : '0 0 0 1px var(--border)',
                       }} />
                   ))}
                 </div>
@@ -344,6 +523,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
           {tab === 'data' && (
             <div>
               <SectionHead title={window.t('s_data')} desc={window.t('s_data_desc')} />
+              <BankSyncSection language={tweaks.language} />
               <Row
                 title={window.t('export_csv')}
                 sub={window.t('export_csv_sub')}
@@ -358,7 +538,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
                 sub={
                   importResult
                     ? importResult.error
-                      ? <span style={{ color: 'var(--expense)' }}>{importResult.error}</span>
+                      ? <span style={{ color: 'var(--danger)' }}>{importResult.error}</span>
                       : <span style={{ color: 'var(--income)' }}>{window.t('import_success').replace('{n}', importResult.count)}</span>
                     : window.t('import_csv_sub')
                 }
@@ -392,7 +572,7 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
             <div>
               <SectionHead title={window.t('s_security')} desc={window.t('s_security_desc')} />
               <Row title={window.t('email_label')} control={<span style={{ fontSize: 13, color: 'var(--text-2)' }} className="mono">{email}</span>} />
-              <Row title={window.t('sign_method')} sub={lastSignIn ? `Last sign-in ${lastSignIn}` : undefined} control={<span className="pill"><span className="dot" /> Google</span>} />
+              <Row title={window.t('sign_method')} sub={lastSignIn ? `Last sign-in ${lastSignIn}` : undefined} control={<span className="pill neutral">{({ google: 'Google', apple: 'Apple' })[user?.app_metadata?.provider] || 'Google'}</span>} />
               <Row
                 title={window.t('sign_out')}
                 sub={window.t('sign_out_sub')}
@@ -425,11 +605,11 @@ function PageSettings({ tweaks, setTweak, onSignOut, userId, user, pwaInstallabl
       {showDeleteConfirm && (
         <div
           onClick={() => setShowDeleteConfirm(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'grid', placeItems: 'center', zIndex: 200 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 200 }}
         >
-          <div onClick={e => e.stopPropagation()} className="card" style={{ width: 400, boxShadow: 'var(--shadow-deep)' }}>
+          <div onClick={e => e.stopPropagation()} className="card modal-card" style={{ width: 400, boxShadow: 'var(--shadow-deep)' }}>
             <div className="card-head">
-              <div className="card-title" style={{ color: 'var(--expense)' }}>{window.t('delete_confirm_title')}</div>
+              <div className="card-title">{window.t('delete_confirm_title')}</div>
               <button className="icon-btn" onClick={() => setShowDeleteConfirm(false)}><SI.x size={14} /></button>
             </div>
             <p style={{ fontSize: 14, color: 'var(--text-2)', margin: '0 0 20px' }}>

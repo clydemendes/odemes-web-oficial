@@ -64,7 +64,7 @@ function Sidebar({ page, setPage, collapsed, onToggleCollapse, counts = {}, user
           <button key={it.id} className={`side-item ${page === it.id ? 'active' : ''}`} onClick={() => setPage(it.id)}>
             <Ico className="ico" />
             <span>{it.label}</span>
-            {it.pill > 0 && <span style={{ marginLeft: 'auto', fontSize: 13, fontWeight: 600, color: 'var(--text-3)' }}>{it.pill}</span>}
+            {it.pill > 0 && <span className="mono" style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text-3)' }}>{it.pill}</span>}
           </button>);
 
       })}
@@ -108,15 +108,9 @@ function applyTheme(theme) {
 }
 
 function applyAccent(hex) {
-  // derive deep + tint
-  const root = document.documentElement;
-  root.style.setProperty('--accent', hex);
-  // Simple deep: darken via mixing with black 18%
-  const deep = mixHex(hex, '#000000', 0.18);
-  root.style.setProperty('--accent-deep', deep);
-  // tint = mix with white
-  root.style.setProperty('--accent-tint', mixHex(hex, '#ffffff', 0.88));
-  root.style.setProperty('--accent-text', mixHex(hex, '#000000', 0.28));
+  // Only the accent itself is set here. Its tint, deep and text shades are derived
+  // in CSS with color-mix, so they stay correct in both light and dark themes.
+  document.documentElement.style.setProperty('--accent', hex);
 }
 function hexToRgb(h) {h = h.replace('#', '');return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));}
 function rgbToHex(r, g, b) {return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');}
@@ -356,7 +350,7 @@ function QuickAddSheet({ open, onClose, userId, currency = 'USD', onSaved }) {
         <button
           type="button"
           className="btn btn-primary"
-          style={{ width: '100%', padding: '14px', fontSize: 16, marginTop: 4 }}
+          style={{ width: '100%', padding: '15px', fontSize: 16, borderRadius: 14, marginTop: 4 }}
           onClick={handleSave}
           disabled={!amountDisplay || !category || saving}
         >

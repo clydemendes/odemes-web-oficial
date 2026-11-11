@@ -10,34 +10,35 @@
 <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Newsreader:opsz,wght@6..72,300..600&display=swap" rel="stylesheet" />
 <style>
   :root {
     --bg: #ffffff;
-    --bg-warm: #f6f5f4;
-    --bg-warm-2: #efeeec;
-    --text: rgba(0,0,0,0.95);
-    --text-2: #615d59;
-    --text-3: #a39e98;
-    --border: rgba(0,0,0,0.1);
-    --border-soft: rgba(0,0,0,0.06);
-    --accent: #F4622A;
-    --accent-deep: #d34e1c;
-    --accent-text: #b34014;
-    --font: 'Inter', -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --bg-warm: #f5f5f5;
+    --bg-warm-2: #ebebeb;
+    --text: #000000;
+    --text-2: #525252;
+    --text-3: #737373;
+    --border: rgba(0,0,0,0.12);
+    --border-soft: rgba(0,0,0,0.07);
+    --accent: #1aae39;
+    --accent-deep: #0f8528;
+    --accent-text: #000000;
+    --font: 'Geist', -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --font-display: 'Newsreader', 'Iowan Old Style', Georgia, serif;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1a1a1a;
-      --bg-warm: #232220;
-      --bg-warm-2: #2c2b28;
-      --text: rgba(255,255,255,0.95);
-      --text-2: #a39e98;
-      --text-3: #6f6b66;
-      --border: rgba(255,255,255,0.1);
-      --border-soft: rgba(255,255,255,0.05);
-      --accent-text: #ff7a44;
+      --bg: #000000;
+      --bg-warm: #161616;
+      --bg-warm-2: #222222;
+      --text: #ffffff;
+      --text-2: #a8a8a8;
+      --text-3: #808080;
+      --border: rgba(255,255,255,0.16);
+      --border-soft: rgba(255,255,255,0.09);
+      --accent-text: #ffffff;
     }
   }
 
@@ -49,6 +50,7 @@
     font-family: var(--font);
     font-size: 16px;
     line-height: 1.6;
+    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
   }
 
@@ -104,20 +106,18 @@
   }
 
   .pt-eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 14px;
+    font-size: 14px;
+    color: var(--text-3);
+    margin-bottom: 12px;
   }
 
   .pt-title {
-    font-size: 40px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    margin-bottom: 16px;
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+    margin-bottom: 18px;
   }
 
   .pt-meta {
@@ -136,20 +136,20 @@
   }
 
   .pt-section-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 13px;
     color: var(--text-3);
-    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 8px;
   }
 
   .pt-section-title {
-    font-size: 20px;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 400;
     letter-spacing: -0.02em;
+    line-height: 1.15;
     color: var(--text);
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
   .pt-body {
@@ -174,9 +174,7 @@
   /* ── Callout (highlighted block) ── */
   .pt-callout {
     background: var(--bg-warm);
-    border: 1px solid var(--border-soft);
-    border-left: 3px solid var(--accent);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 14px 18px;
     margin-top: 16px;
     font-size: 14px;
@@ -231,12 +229,14 @@
     gap: 8px;
     font-size: 15px;
     font-weight: 500;
-    color: var(--accent-text);
-    text-decoration: none;
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 4px;
   }
 
   .pt-contact a:hover {
-    text-decoration: underline;
+    text-decoration-color: currentColor;
   }
 
   /* ── Footer ── */
@@ -267,18 +267,18 @@
 
   /* ── Responsive ── */
   @media (max-width: 600px) {
-    .pt-title { font-size: 30px; }
+    .pt-title { font-size: 40px; }
     .pt-nav { margin-bottom: 44px; }
     .pt-hero { margin-bottom: 40px; }
   }
 
   /* ── Logo dark swap ── */
-  .logo-light { display: block; }
-  .logo-dark  { display: none; }
+  .pt-logo .logo-light { display: block; }
+  .pt-logo .logo-dark  { display: none; }
 
   @media (prefers-color-scheme: dark) {
-    .logo-light { display: none; }
-    .logo-dark  { display: block; }
+    .pt-logo .logo-light { display: none; }
+    .pt-logo .logo-dark  { display: block; }
   }
 </style>
 </head>

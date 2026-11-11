@@ -21,7 +21,7 @@ window.currencySymbol = function(currency) {
 
 const DEFAULTS = {
   theme: 'dark',
-  accent: '#F4622A',
+  accent: '#1aae39',
   homeVariation: 'split',
   density: 'comfortable',
   currency: 'USD',
@@ -87,6 +87,16 @@ function App() {
     return () => document.documentElement.classList.remove('has-pwa-banner');
   }, [showPwaBanner]);
 
+  // One-time move from the old orange default to the green accent. Runs once per browser,
+  // so anyone who later picks orange on purpose in Settings keeps it.
+  React.useEffect(() => {
+    try {
+      if (localStorage.getItem('odemes-accent-v2')) return;
+      localStorage.setItem('odemes-accent-v2', '1');
+      if ((tweaks.accent || '').toLowerCase() === '#f4622a') setTweak('accent', DEFAULTS.accent);
+    } catch (e) {}
+  }, []);
+
   React.useEffect(() => { applyTheme(tweaks.theme); }, [tweaks.theme]);
   React.useEffect(() => { applyAccent(tweaks.accent); }, [tweaks.accent]);
   React.useEffect(() => { document.documentElement.setAttribute('data-density', tweaks.density); }, [tweaks.density]);
@@ -132,6 +142,10 @@ function App() {
         setUser(session.user);
         loadProfile(session.user.id);
         loadCounts(session.user.id);
+        // Invited users with a connected bank get fresh transactions on open (throttled).
+        window.bankSyncInBackground?.(session.user.id).then(r => {
+          if (r && r.added) loadCounts(session.user.id);
+        });
         setPage('home');
       } else {
         setUser(null);
@@ -169,8 +183,8 @@ function App() {
   if (booting) {
     return (
       <div className="stage">
-        <div className="browser" style={{ display: 'grid', placeItems: 'center' }}>
-          <div style={{ fontSize: 14, color: 'var(--text-3)' }}>Loading…</div>
+        <div className="boot" role="status" aria-label="Loading">
+          <div className="boot-mark" />
         </div>
       </div>
     );

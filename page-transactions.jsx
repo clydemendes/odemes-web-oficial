@@ -71,7 +71,7 @@ function TxModal({ tx, onClose, onSave, onDelete, allExpItems, allIncItems }) {
   const allItems = form.type === 'expense' ? allExpItems : allIncItems;
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'grid', placeItems: 'center', zIndex: 200 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 200 }}>
       <div onClick={e => e.stopPropagation()} className="card modal-card" style={{ width: 440, boxShadow: 'var(--shadow-deep)' }}>
         <div className="card-head">
           <div className="card-title">{isNew ? window.t('new_txn') : window.t('edit_txn')}</div>
@@ -118,19 +118,19 @@ const TxItem = React.memo(function TxItem({ t, onEdit, currency }) {
     <div
       className="txn-item"
       onClick={() => onEdit(t)}
-      style={{ display: 'grid', gridTemplateColumns: '32px 1fr 100px auto auto', gap: 14, alignItems: 'center', width: '100%', padding: '12px 20px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer' }}
+      style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) 90px 130px 32px', gap: 14, alignItems: 'center', width: '100%', padding: '12px 22px', borderBottom: '1px solid var(--border-soft)', background: 'transparent', cursor: 'pointer', transition: 'background 100ms ease' }}
       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-warm)'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
     >
-      <div className="txn-icon" style={{ width: 32, height: 32, borderRadius: 8, display: 'grid', placeItems: 'center', background: isIncome ? 'var(--income-tint)' : 'var(--expense-tint)', color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
+      <div className="txn-icon" style={{ width: 32, height: 32, borderRadius: 99, display: 'grid', placeItems: 'center', background: isIncome ? 'var(--income-tint)' : 'var(--bg-warm)', color: isIncome ? 'var(--income)' : 'var(--text-2)' }}>
         {isIncome ? <TxI.arrow_down size={14} /> : <TxI.arrow_up size={14} />}
       </div>
       <div>
         <div className="txn-cat" style={{ fontSize: 14, fontWeight: 500 }}>{t.category}</div>
-        <div className="txn-note" style={{ fontSize: 12, color: 'var(--text-3)' }}>{t.note || '—'}</div>
+        {t.note && <div className="txn-note" style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{t.note}</div>}
       </div>
-      <div className="txn-type" style={{ fontSize: 12, color: 'var(--text-3)', textTransform: 'capitalize' }}>{isIncome ? window.t('income') : window.t('expense')}</div>
-      <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 600, color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
+      <div className="txn-type" style={{ fontSize: 13, color: 'var(--text-3)' }}>{isIncome ? window.t('income') : window.t('expense')}</div>
+      <div className="mono txn-amt" style={{ fontSize: 14, fontWeight: 500, textAlign: 'right', color: isIncome ? 'var(--income)' : 'var(--expense)' }}>
         {isIncome ? '+' : '−'}{window.fmtCurrency(t.amount, currency)}
       </div>
       <button className="icon-btn" onClick={e => { e.stopPropagation(); onEdit(t); }}><TxI.edit size={14} /></button>
@@ -233,55 +233,56 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
 
   return (
     <div className="page">
-      <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
-        <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('nav_transactions')}</h2>
+      <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
+        <h2 className="page-title">{window.t('nav_transactions')}</h2>
         <button className="btn btn-primary" onClick={() => setModal('new')}><TxI.plus size={14} /> {window.t('add')}</button>
       </div>
 
-      <div className="card list-card" style={{ marginBottom: 16, padding: 0 }}>
+      <div className="card list-card stat-card" style={{ marginBottom: 16, padding: 0 }}>
         <div className="stat-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <div className="stat-cell" style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
-            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('income')}</div>
-            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(income, currency)}</div>
+          <div className="stat-cell" style={{ padding: '20px 22px', borderRight: '1px solid var(--border-soft)' }}>
+            <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('income')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(income, currency)}</div>
           </div>
-          <div className="stat-cell" style={{ padding: 20, borderRight: '1px solid var(--border-soft)' }}>
-            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('expense')}</div>
-            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(expenses, currency)}</div>
+          <div className="stat-cell" style={{ padding: '20px 22px', borderRight: '1px solid var(--border-soft)' }}>
+            <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('expense')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(expenses, currency)}</div>
           </div>
-          <div className="stat-cell" style={{ padding: 20 }}>
-            <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('net')}</div>
-            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: net >= 0 ? 'var(--income)' : 'var(--expense)' }}>
+          <div className="stat-cell" style={{ padding: '20px 22px' }}>
+            <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('net')}</div>
+            <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: net >= 0 ? 'var(--income)' : 'var(--danger)' }}>
               {net >= 0 ? '+' : '−'}{window.fmtCurrency(net, currency)}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card filters-card" style={{ marginBottom: 16, padding: 14, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="card filters-card" style={{ marginBottom: 16, padding: 14, display: 'flex', gap: '12px 10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <div className="seg">
           {periods.map(p => (
             <button key={p.id} onClick={() => handlePeriodChange(p.id)} className={period === p.id ? 'active' : ''}>{p.label}</button>
           ))}
         </div>
         {period !== 'overall' && (
-          <>
+          <div className="period-nav" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <button className="btn btn-ghost" style={{ padding: '6px 8px', color: 'var(--text-2)' }} onClick={() => setOffset(o => o - 1)}><TxI.arrow_left size={14} /></button>
-            <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{label}</span>
+            <span className="mono" style={{ fontSize: 14, fontWeight: 500 }}>{label}</span>
             <button className="btn btn-ghost" style={{ padding: '6px 8px', color: offset >= 0 ? 'var(--text-3)' : 'var(--text-2)' }} onClick={() => setOffset(o => Math.min(o + 1, 0))} disabled={offset >= 0}><TxI.arrow_right size={14} /></button>
-          </>
+          </div>
         )}
         <div className="filters-row" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, width: '100%' }}>
-          {period === 'overall' && <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{window.t('all_time')}</span>}
+          {period === 'overall' && <span className="mono" style={{ fontSize: 14, fontWeight: 500 }}>{window.t('all_time')}</span>}
           <div className="filters-pills" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {filters.map(f => (
               <button key={f.id} onClick={() => setFilter(f.id)}
-                style={{ padding: '6px 12px', borderRadius: 9999, background: filter === f.id ? 'var(--accent-tint)' : 'var(--bg-warm)', color: filter === f.id ? 'var(--accent-text)' : 'var(--text-2)', border: '1px solid ' + (filter === f.id ? 'transparent' : 'var(--border-soft)'), fontSize: 12, fontWeight: 600 }}>{f.label}</button>
+                aria-pressed={filter === f.id}
+                style={{ padding: '6px 13px', borderRadius: 9999, background: filter === f.id ? 'var(--ink)' : 'var(--bg-warm)', color: filter === f.id ? 'var(--ink-fg)' : 'var(--text-2)', fontSize: 13, fontWeight: 500, transition: 'background 120ms ease, color 120ms ease' }}>{f.label}</button>
             ))}
           </div>
-        </div>
-        <div className="filters-search" style={{ position: 'relative' }}>
-          <TxI.search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
-          <input className="input" placeholder={window.t('search_ph')} value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 32, width: 200 }} />
+          <div className="filters-search" style={{ position: 'relative', marginLeft: 'auto' }}>
+            <TxI.search size={14} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-3)' }} />
+            <input className="input" placeholder={window.t('search_ph')} aria-label={window.t('search_ph')} value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 33, width: 240, paddingTop: 8, paddingBottom: 8 }} />
+          </div>
         </div>
       </div>
 
@@ -293,11 +294,11 @@ function PageTransactions({ onCountChange, userId, currency = 'USD' }) {
           const dayTotal = list.reduce((s, t) => s + (t.type === 'income' ? t.amount : -t.amount), 0);
           return (
             <div key={d}>
-              <div className="txn-day-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px', background: 'var(--bg-warm)', borderTop: '1px solid var(--border-soft)', borderBottom: '1px solid var(--border-soft)' }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  {trd(d)} <span style={{ color: 'var(--text-3)', marginLeft: 6 }}>{tfd(d)}</span>
+              <div className="txn-day-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 22px', background: 'var(--bg-warm)' }}>
+                <div style={{ fontSize: 13, fontWeight: 500 }}>
+                  {trd(d)} <span style={{ color: 'var(--text-3)', marginLeft: 6, fontWeight: 400 }}>{tfd(d)}</span>
                 </div>
-                <div className="mono" style={{ fontSize: 12, fontWeight: 600, color: dayTotal >= 0 ? 'var(--income)' : 'var(--expense)' }}>
+                <div className="mono" style={{ fontSize: 13, fontWeight: 500, color: dayTotal >= 0 ? 'var(--income)' : 'var(--text-2)' }}>
                   {dayTotal >= 0 ? '+' : '−'}{window.fmtCurrency(dayTotal, currency)}
                 </div>
               </div>

@@ -3,7 +3,7 @@
 //   • Supabase (auth / data)        → never touched, always live network.
 //   • Same-origin app shell         → stale-while-revalidate (instant load, updates in background).
 //   • Trusted CDNs (React/Babel/fonts) → cache-first (immutable, versioned URLs).
-const VERSION = 'odemes-v2';
+const VERSION = 'odemes-v3';
 const SHELL_CACHE = `${VERSION}-shell`;
 const CDN_CACHE = `${VERSION}-cdn`;
 

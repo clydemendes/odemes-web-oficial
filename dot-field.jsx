@@ -91,10 +91,13 @@ const DotField = React.memo(function DotField({
       dotsRef.current = dots;
     }
 
+    let visible = true;
+
     function onMouseMove(e) {
-      const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
+      if (!visible) return;
+      const r = canvas.getBoundingClientRect();
+      mouseRef.current.x = e.clientX - r.left;
+      mouseRef.current.y = e.clientY - r.top;
     }
 
     function updateMouseSpeed() {
@@ -205,6 +208,8 @@ const DotField = React.memo(function DotField({
     }
 
     function tick() {
+      // Stop the loop while the field is off-screen; the observer below restarts it.
+      if (!visible) { rafRef.current = null; return; }
       frameCount++;
       draw();
       rafRef.current = requestAnimationFrame(tick);
@@ -212,6 +217,14 @@ const DotField = React.memo(function DotField({
 
     doResize();
     window.addEventListener('resize', resize);
+    // The container can change height without the window resizing (fonts loading, text wrapping).
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(resize) : null;
+    ro?.observe(canvas.parentElement);
+    const io = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!staticOnly && visible && rafRef.current == null) rafRef.current = requestAnimationFrame(tick);
+    }) : null;
+    io?.observe(canvas);
 
     let speedInterval;
     if (!staticOnly) {
@@ -232,6 +245,8 @@ const DotField = React.memo(function DotField({
       cancelAnimationFrame(rafRef.current);
       clearInterval(speedInterval);
       clearTimeout(resizeTimer);
+      ro?.disconnect();
+      io?.disconnect();
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
     };

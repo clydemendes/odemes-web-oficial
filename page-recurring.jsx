@@ -29,7 +29,7 @@ function RecurringModal({ initial, onClose, onSave, onDelete }) {
   const valid = form.amount && parseFloat(form.amount) > 0 && form.category && form.next;
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'grid', placeItems: 'center', zIndex: 200 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'grid', placeItems: 'center', zIndex: 200 }}>
       <div onClick={e => e.stopPropagation()} className="card modal-card" style={{ width: 460, boxShadow: 'var(--shadow-deep)' }}>
         <div className="card-head">
           <div className="card-title">{isNew ? window.t('new_recurring_title') : window.t('edit_recurring_title')}</div>
@@ -145,37 +145,37 @@ function PageRecurring({ onCountChange, userId, currency = 'USD' }) {
 
   return (
     <div className="page">
-      <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
+      <div className="page-head" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 28 }}>
         <div>
-          <h2 className="page-title" style={{ margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>{window.t('nav_recurring')}</h2>
-          <div className="page-sub" style={{ fontSize: 14, color: 'var(--text-2)', marginTop: 4 }}>{window.t('recurring_sub')}</div>
+          <h2 className="page-title">{window.t('nav_recurring')}</h2>
+          <div className="page-sub">{window.t('recurring_sub')}</div>
         </div>
         <button className="btn btn-primary" onClick={() => setModal('new')}><RI.plus size={14} /> {window.t('new_recurring')}</button>
       </div>
 
       <div className="stat-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 }}>
         <div className="card">
-          <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('monthly_out')}</div>
-          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(monthlyOut, currency)}</div>
-          <div className="stat-meta" style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{items.filter(r => r.type === 'expense' && r.frequency === 'monthly').length} {window.t('active')}</div>
+          <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('monthly_out')}</div>
+          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: 'var(--expense)' }}>−{window.fmtCurrency(monthlyOut, currency)}</div>
+          <div className="stat-meta" style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{items.filter(r => r.type === 'expense' && r.frequency === 'monthly').length} {window.t('active')}</div>
         </div>
         <div className="card">
-          <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('monthly_in')}</div>
-          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(monthlyIn, currency)}</div>
-          <div className="stat-meta" style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{items.filter(r => r.type === 'income' && r.frequency === 'monthly').length} {window.t('active')}</div>
+          <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('monthly_in')}</div>
+          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: 'var(--income)' }}>+{window.fmtCurrency(monthlyIn, currency)}</div>
+          <div className="stat-meta" style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{items.filter(r => r.type === 'income' && r.frequency === 'monthly').length} {window.t('active')}</div>
         </div>
         <div className="card">
-          <div className="stat-label" style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{window.t('net_per_month')}</div>
-          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.025em', marginTop: 6, color: (monthlyIn - monthlyOut) >= 0 ? 'var(--income)' : 'var(--expense)' }}>
+          <div className="stat-label" style={{ fontSize: 13, color: 'var(--text-3)' }}>{window.t('net_per_month')}</div>
+          <div className="mono stat-value" style={{ fontSize: 28, fontWeight: 500, letterSpacing: '-0.035em', marginTop: 6, color: (monthlyIn - monthlyOut) >= 0 ? 'var(--income)' : 'var(--danger)' }}>
             {(monthlyIn - monthlyOut) >= 0 ? '+' : '−'}{window.fmtCurrency(monthlyIn - monthlyOut, currency)}
           </div>
-          <div className="stat-meta" style={{ fontSize: 12, color: 'var(--text-2)', marginTop: 2 }}>{window.t('after_fixed')}</div>
+          <div className="stat-meta" style={{ fontSize: 13, color: 'var(--text-3)', marginTop: 2 }}>{window.t('after_fixed')}</div>
         </div>
       </div>
 
       <div className="card list-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="list-card-head" style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid var(--border-soft)' }}>
-          <div className="card-title">{window.t('nav_recurring')} · {items.length}</div>
+        <div className="list-card-head" style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 22px', borderBottom: '1px solid var(--border-soft)' }}>
+          <div className="card-title">{window.t('nav_recurring')} <span className="mono" style={{ color: 'var(--text-3)', fontWeight: 400, marginLeft: 6 }}>{items.length}</span></div>
           <div className="card-sub mono">{window.t('sorted_by_due')}</div>
         </div>
         {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>{window.t('loading')}</div>}
@@ -183,20 +183,20 @@ function PageRecurring({ onCountChange, userId, currency = 'USD' }) {
         {items.slice().sort((a, b) => a.next.localeCompare(b.next)).map(r => {
           const b = dueBadge(r.next);
           return (
-            <div key={r.id} className="recur-item" style={{ display: 'grid', gridTemplateColumns: '36px 1fr 110px 120px 120px auto', gap: 14, alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid var(--border-soft)' }}>
-              <div className="recur-icon" style={{ width: 36, height: 36, borderRadius: 10, background: r.type === 'income' ? 'var(--income-tint)' : 'var(--bg-warm)', display: 'grid', placeItems: 'center', color: r.type === 'income' ? 'var(--income)' : 'var(--text-2)', fontWeight: 700, fontSize: 13 }}>
+            <div key={r.id} className="recur-item" style={{ display: 'grid', gridTemplateColumns: '36px minmax(0, 1fr) 96px 110px 130px 132px', gap: 14, alignItems: 'center', padding: '14px 22px', borderBottom: '1px solid var(--border-soft)' }}>
+              <div className="recur-icon" style={{ width: 36, height: 36, borderRadius: 99, background: r.type === 'income' ? 'var(--income-tint)' : 'var(--bg-warm)', display: 'grid', placeItems: 'center', color: r.type === 'income' ? 'var(--income)' : 'var(--text-2)', fontWeight: 500, fontSize: 14, textTransform: 'uppercase' }}>
                 {r.category[0]}
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{r.category}</div>
-                <div className="recur-meta" style={{ fontSize: 12, color: 'var(--text-3)' }}>{r.note}</div>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{r.category}</div>
+                <div className="recur-meta" style={{ fontSize: 12.5, color: 'var(--text-3)' }}>{r.note}</div>
               </div>
               <div className="pill neutral recur-freq">{r.frequency === 'monthly' ? window.t('monthly') : window.t('yearly')}</div>
               <span className={`pill recur-due ${b.cls}`}>{b.label}</span>
-              <div className="mono recur-amt" style={{ fontSize: 14, fontWeight: 600, color: r.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
+              <div className="mono recur-amt" style={{ fontSize: 14, fontWeight: 500, textAlign: 'right', color: r.type === 'income' ? 'var(--income)' : 'var(--expense)' }}>
                 {r.type === 'income' ? '+' : '−'}{window.fmtCurrency(r.amount, currency)}
               </div>
-              <div className="recur-actions" style={{ display: 'flex', gap: 6 }}>
+              <div className="recur-actions" style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                 {b.cls === 'expense' && (
                   <button className="btn btn-primary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => confirmItem(r.id)}>
                     <RI.check size={12} /> {window.t('confirm_btn')}
